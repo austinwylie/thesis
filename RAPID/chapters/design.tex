@@ -1,17 +1,20 @@
 \chapter{Design}
 \label{design}
 
-RAPID was designed to fulfill the enumerated requirements in Chapter \ref{requirements}.
+RAPID was designed to fulfill Chapter~\ref{requirements}'s enumerated system requirements.
+
+It seems natural to begin this discussion where a user or client application would begin their interactions with RAPID: adding data to the system.
 
 
 
 Modification to "Feature" concept - we have additional properties
 
-Hold onto file
+Keep file around for various uses
 
-
-It seems most natural to start this discussion at the same place a user or client application would begin their interactions with RAPID: adding data to the system.
-
-When a designated dataset is added to the system, it validates it, reads the input format, and adds it to the database in the appropriate models.
+When a dataset is added to the system, it is validated, reads the input format, and adds it to the database in the appropriate models.
 
 Note on Django models converting to SQL
+
+
+
+

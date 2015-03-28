@@ -42,9 +42,6 @@ Unit testing is also important because it validates the technical aspects of the
 Data can move linearly up and down that list, but can not skip from the top to the bottom or vice versa. Each of those steps and transitions can also be viewed as a data integrity checkpoint that deserves a unit test. For instance, a polygon made up of bordering points (0, 0), (0, 10), and (10, 0) still needs to have the same meaning---a triangle with those three points---no matter where it's located. A GeoJSON file, a Python object, the WKT notation, and PostGIS queries and data structures can all be inspected to ensure that the same data is contained in each. If it isn't, the data was misshaped somewhere along the line that can, hopefully, be traced.
 
 
-
-NOTES
-
-Differences between on-the-fly file conversion and exporting abstract data
-
-Using a bounding box
+% NOTES
+% Differences between on-the-fly file conversion and exporting abstract data
+% Using a bounding box
