@@ -1,0 +1,47 @@
+\chapter{Requirements}
+\label{requirements}
+
+The previous discussions overview operators' motivations and practices for pipeline integrity management. We've also covered the geographic and technological framework that RAPID works within---primarily adhering to OGC's Abstract Specification. Alongside external pipeline operating partners, our team established additional requirements for RAPID's domain-specific functionality.
+
+At a high level, our goal is to combine the earlier-mentioned spatial operations and formats with updatable and searchable  geographic data. Partner organizations also require permissioning capabilities so that private and proprietary information is not shared with unprivileged requesters. These characteristics are spelled out in more detail below.\footnote{Of additional note, these requirements are particularly suited to RAPID's \textit{data model}. Other tertiary requirements exist for the REST API---pertaining to its style and usage---but many of those are derived from the central asks of \textit{this} chapter. Alexa's thesis describes the requirements gathering and design processes for the API in depth.}
+
+\section{Input formats}
+
+Throughout our own experimentation and research, GeoJSON and Shapefiles (described in Chapter~\ref{background}) emerged as reasonable starting points for RAPID's file ingestion. There are several reasons:
+
+\begin{description}
+  \item[Availability] Many (or even most) public geospatial datasets are archived in one or both of these formats.
+  \item[Standardization] While not wholly formulated by the OGC, both GeoJSON and Shapefiles incorporate the Abstract Specification, and other components of the formats are open standards. This, in part, drives their commonness and availability.
+  
+Shapefiles, primarily Esri's creation for their ArcGIS software, include many standard \textit{and} non-standard appendages and amendments. While some of these are used to enable extended functionality in propriety systems, they're often used for (optional) performance tuning. That is, the most essential vector data is openly specified, and the other components aren't particularly important to us.
+
+\item[Toolsets] Thanks to their standardization and popularity, these formats  are well-supported by many open-source spatial libraries and frameworks. This means a lot of robust, reusable functionality for parsing and validation already exists.
+
+\item[Abstraction and conversion] Again, with the consideration that these vector formats are standardized and built on top of the Abstract Specification, their data types can store and represent the \textit{same information}. Further, these representations can be converted among one another: the vectors of a valid GeoJSON file can be entirely converted to a Shapefile with the same vectors. This also means that end users---even third party developers---don't often need to know the underlying detail of which file format was used at one point or another. In the case that one particular format is required, the conversion is mostly trivial.
+
+\item[GeoJSON readability] GeoJSON's relatively user-friendly and readable syntax (extended from JSON) lets nontechnical stakeholders and contractors still understand (and even generate) structured geospatial data with minimal training and software.
+
+\end{description}
+
+
+
+Requirement: modularity for parsers
+
+
+
+
+GeoJSON
+Shapefiles
+
+
+Separable data ``layers''
+
+User-modifiable ``views''
+
+
+Notifications
+Permission management
+
+
+The next chapter explains how RAPID's final design meets these requirements.
+
