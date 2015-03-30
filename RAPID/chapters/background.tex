@@ -2,7 +2,9 @@
 \label{background}
 
 \section{Introduction}
-RAPID's connected DSSs make use of spatial data; their eventual goal is to lay out and recommend pipeline routes through areas with as few hazards as possible~\cite{Dunning2013}. As such, this system can be considered a spatial DSS (SDSS). SDSSs are uniquely tasked with providing ``easy access to spatial data and decision models through the integration of spatial databases, analytical models, and visualization tools''~\cite{RedlandsSDSS}.
+\label{background_intro}
+RAPID's connected DSSs make use of spatial data;\footnote{\textit{Spatial} versus \textit{geospatial} terminology: Some groups make a subtle distinction between spatial data and geospatial data. In those cases, spatial data describes data ``distributed in three-dimensional space,'' with ``measurable'' dimensions~\cite{Bhatta2011}. Given \textit{geography}'s definition, geospatial data is ``spatial data which is related to the Earth''~\cite{Bhatta2011}. In this thesis, spatial data is always located on Earth, so \textit{spatial} and \textit{geospatial} will be used interchangeably. As one supporting source, the United States Geological Survey considers ``the terms spatial and geospatial [to be] equivalent.''
+\cite{Bhatta2011}} their eventual goal is to lay out and recommend pipeline routes through areas with as few hazards as possible~\cite{Dunning2013}. As such, this system can be considered a spatial DSS (SDSS). SDSSs are uniquely tasked with providing ``easy access to spatial data and decision models through the integration of spatial databases, analytical models, and visualization tools''~\cite{RedlandsSDSS}.
 
 RAPID manages the spatial database component and also has to account for geographic information systems (GISs) mathematical foundations. This chapter describes basic GIS concepts and related information about geospatial database management systems, structured and unstructured geospatial data, and related standards. These have all played into RAPID's implementation and motivations.
 
@@ -10,10 +12,6 @@ RAPID manages the spatial database component and also has to account for geograp
 The Open Geospatial Consortium (OGC) is an international consortium, originating in 1994, with several hundred industry, government, and academic participants. Its goal is to establish standard formats and interfaces for geospatial data and applications. They've created over thirty-five standards, usually in the form of markup, modeling, or query languages and API or protocol specifications~\cite{ogc}.
 
 Many organizations insist on using OGC-compliant products and services to promote robustness and interoperability. RAPID implements components of several OGC Standards.
-
-\paragraph{A note on terminology: \textit{spatial} versus \textit{geospatial}}
-Some groups make a subtle distinction between \textit{spatial} data and \textit{geospatial} data. In those cases, spatial data describes data ``distributed in three-dimensional space,'' with ``measurable'' dimensions~\cite{Bhatta2011}. Given \textit{geography}'s definition, geospatial data is ``spatial data which is related to the Earth''~\cite{Bhatta2011}. In this thesis, spatial data is always located on Earth, so \textit{spatial} and \textit{geospatial} will be used interchangeably. As one supporting source, the United States Geological Survey considers ``the terms spatial and geospatial [to be] equivalent.''
-\cite{Bhatta2011}
 
 \section{GISs}
 A GIS is a computer system (including hardware and software) for working with geographic data---that is, data associated with a location in space~\cite{Esriintro}. Quite simply, GISs provide a means of managing and analyzing this data. More importantly, GISs allow people to understand deep, complex information about geographic locations, their relative positions, and the objects and conditions that are located there~\cite{Esriintro}.
@@ -36,7 +34,7 @@ In summary, GISs capture, manage, analyze, and display geographically-referenced
 \section{Data characteristics}
 The section outlines more technical design considerations for geospatial data, which isn't always easily represented or stored in common data formats. Although humans often represent points in space with numbers and, occasionally, symbols, it's best to treat them as their own primitive data type in a software system~\cite{gentle_intro}.
 
-Because of this, geospatial data structures and file formats are forced to account for specifying points in two dimensions (usually latitude and longitude) or three dimensions (usually latitude, longitude, and elevation).\footnote{Conceptually, time can be viewed as an additional dimension---one of a feature's properties---so the data is geospatial-temporal.} GISs and spatial database management systems often need to account for any arbitrary coordinate system~\cite{gentle_intro}.
+Because of this, geospatial data structures and file formats are forced to account for specifying points in two dimensions (usually latitude and longitude) or three dimensions (usually latitude, longitude, and elevation).\footnote{Conceptually, time can be viewed as an additional dimension---one of a feature's properties---so the data is geospatial-\textit{temporal}.} GISs and spatial database management systems often need to account for any arbitrary coordinate system~\cite{gentle_intro}.
 
 Considering the above, two common file and data types have come about in GISs: vector and raster. They are briefly described below.
 
@@ -79,13 +77,13 @@ Georeferencing makes raster data useful geographically: it associates the raster
 As long as four pieces of information are known, a raster file can be properly georeferenced:
 
 \begin{itemize}
-  \item coordinates of the file's top-left pixel,
-  \item width of a pixel,
-  \item height of a pixel, and
-  \item rotation amount of the grid.
+  \item Coordinates of the file's top-left pixel
+  \item Width of a pixel
+  \item Height of a pixel
+  \item Rotation of the grid
 \end{itemize}
 
-With these four values, the raster data is accurately positioned in a coordinate system~\cite{gentle_intro}.
+With these four values, raster data can be accurately positioned in a coordinate system~\cite{gentle_intro}.
 
 \subsection{Abstract Specification}
 OGC's Abstract Specification describes and standardizes the essential components of geospatial data, including the central information model and glossary for all OGC Standards~\cite{AbstractSpecFaq}.
@@ -103,7 +101,7 @@ Inserting geometries (vector data) into a GDBMS can look like the following. We 
 
 Note that two numbers separated by a space is a coordinate pair. The commas separate the points, creating an ordered series. This particular syntax is Well-Known Text (WKT), an OGC Standard for defining Abstract Specification geometries~\cite{ogc}. The five geometric data types correspond to the types described above in Section~\ref{sec:vector}.
 
-\begin{verbatim}
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 CREATE TABLE geometries
  (name varchar, geom geometry);
 
@@ -122,8 +120,8 @@ INSERT INTO geometries VALUES
    `POLYGON((0 0, 1 0, 1 1, 0 1, 0 0)))');
 
 SELECT name, ST_AsText(geom)
- FROM geometries;
-\end{verbatim}
+FROM geometries;
+\end{Verbatim}
 
 That would create four geometries in a geospatial database: a single point, multiple connected strings, polygons with and without holes, and a generic collection of some of those same types.
 
@@ -146,20 +144,20 @@ It's easy to see where and why these come in handy. As a simple example, imagine
 
 The queries below show some functions that are unique to geospatial data: the first selects the neighborhood(s) that the Broad Street subway station is located in, and the second selects points of interest within 1609 meters of any road.
 
-\begin{verbatim}
-SELECT
-  subways.name
-  neighborhoods.name
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
+SELECT nyc_subways.name, nyc_neighborhoods.name
 FROM nyc_neighborhoods
-JOIN nyc_subway_stations
-ON ST_Contains(neighborhoods.geom, subways.geom)
+JOIN nyc_subways
+ON ST_Contains(nyc_neighborhoods.geom, nyc_subways.geom)
 WHERE subways.name = 'Broad St';
+\end{Verbatim}
 
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 SELECT roads.roadname, pois.poiname
 FROM roads
 JOIN pois 
-ON ST_DWithin(roads.geog, pois.geog, 1609);
-\end{verbatim}
+ON ST_DWithin(roads.geom, pois.geom, 1609);
+\end{Verbatim}
 
 This type of analysis can be done application-side (as opposed to in the database) but GDBMS technologies have advanced enough that this type of data can be stored and queried relatively efficiently, with user-friendly queries that quickly and simply answer questions like the above one.
 
@@ -184,7 +182,7 @@ Interestingly, shapefiles have begun to show their age (they originated in the e
 \subsubsection{GeoJSON}
 GeoJSON is another common vector file format, although it's not standardized by OGC. It stores data in a nicely-readable format---a superset of JSON (JavaScript Object Notation). Take this example of a geospatial feature in GeoJSON:
 
-\begin{verbatim}
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 { "type": "Feature",
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
@@ -193,7 +191,7 @@ GeoJSON is another common vector file format, although it's not standardized by 
                        [180.0, -5.0], [-30.0, -90.0]]]
     }
 }
-\end{verbatim}
+\end{Verbatim}
 
 It should be apparent that this syntax corresponds closely to the Abstract Specification we've been discussing, with standardized geometry types notated by series of points (latitudes and longitudes in this specific case). Arbitrary, case-specific attributes can be appended in the same fashion as the key-value pairs above.
 
@@ -202,5 +200,5 @@ The \textit{bbox} attribute is a \textit{bounding box}, which serves as an appro
 
 A bounding box is not unique to GeoJSON and is commonly found in geospatial data specifications and APIs.
 
-\subsubsection{Others}
-There are dozens of other geospatial file formats with certain specializations and application-specific features, but shapefiles and GeoJSON are nicely representative of their general capabilities \textit{and} stylistic differences.
+\subsubsection{Related formats}
+There are dozens of other geospatial file formats with certain specializations, degrees of standardization, and application-specific features, but Shapefiles and GeoJSON are nicely representative of their general capabilities and stylistic differences.

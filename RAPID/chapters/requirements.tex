@@ -3,7 +3,7 @@
 
 The previous discussions overview operators' motivations and practices for pipeline integrity management. We've also covered the geographic and technological framework that RAPID works within---primarily adhering to OGC's Abstract Specification. Alongside external pipeline operating partners, our team established additional requirements for RAPID's domain-specific functionality.
 
-At a high level, our goal is to combine the earlier-mentioned spatial operations and formats with updatable and searchable  geographic data. Partner organizations also require permissioning capabilities so that private and proprietary information is not shared with unprivileged requesters. These characteristics are spelled out in more detail below.\footnote{Of additional note, these requirements are particularly suited to RAPID's \textit{data model}. Other tertiary requirements exist for the REST API---pertaining to its style and usage---but many of those are derived from the central asks of \textit{this} chapter. Alexa's thesis describes the requirements gathering and design processes for the API in depth.}
+At a high level, our goal is to combine the earlier-mentioned spatial operations and formats with updatable and searchable  geographic data. Partner organizations also require permissioning capabilities so that private and proprietary information is not shared with unprivileged requesters. These characteristics are spelled out in more detail below.\footnote{Of additional note, these requirements are particularly suited to RAPID's \textit{data model}. Other tertiary requirements exist for the REST API---pertaining to its style and usage---but many of those are derived from the central asks in this chapter. Alexa's thesis describes the API's requirements gathering and design processes in depth.}
 
 \section{Input formats}
 
@@ -23,9 +23,42 @@ Shapefiles, primarily Esri's creation for their ArcGIS software, include many st
 
 \end{description}
 
+\section{Output formats}
+For the same reasons that we settled on GeoJSON and Shapefiles as input formats, they both also made sense as output formats, and data in RAPID can be exported as either (no matter the input format). We can count on numerous external developers and applications to successfully use and understand GeoJSON, especially.\footnote{This general decision was helpful for practical purposes, too: with the tools and libraries we're using, it's less difficult to export formats we've already researched and configured for decoding.}
+
+While a commercial, enterprise-ready application might implement several extensive OGC standards for data exchange and parsing---enabling instant plug-and-play functionality for some GISs---GeoJSON, supplemented by Shapefiles, was chosen as a reasonable middle ground, providing still-common formats and some flexibility to developers.
+
+\subsection{Related work and standards}
+\subsubsection{Web Feature Service}
+OGC's Web Feature Service is a lengthy and highly-specific standard for geospatial data storage, formatting, and querying. While this complex, in-use standard outdoes RAPID's capabilities in some scenarios, there's currently no standard specification for spatial REST APIs.
+
+This gives Alexa and myself the opportunity to create an ecosystem as we see fit---allowing even developers without GIS backgrounds to incorporate RAPID data relatively pain-free (given that they can learn GeoJSON). PolyView,\footnote{Introduced in Section~\ref{polyview_intro} and detailed in~\ref{polyview_details}.} for instance, would not have the resources to interface with a Web Feature Service.
+
+\subsubsection{FeatureServer}
+
+One piece of related work we're aware of, an open-source project from 2013 called FeatureServer (primarily written in Python), incorporates many OGC standards, allowing for automated and full-featured data querying. It adds a REST API, too.
+
+FeatureServer, however, still expects thorough understanding of these specific standards, acting mostly as a set of helper tools---a stepping stone between custom GISs and WFSs.
 
 
-Requirement: modularity for parsers
+With these considerations, however, we still ensure the system is modular enough to incorporate feedback and possibly introduce fuller standards support down the road.
+
+
+As noted earlier, it's not difficult, either, to find and use open-source libraries that convert these formats to other OGC-compliant ones.\footnote{This functionality can be added to RAPID in the future, it just doesn't exist yet.}
+
+
+\section{Modularity and abstraction}
+\subsection{Updatable}
+
+
+\section{Data layers}
+
+\section{Querying}
+\subsection{LayerDataViews}
+
+
+\section{Security and permissioning}
+
 
 
 
