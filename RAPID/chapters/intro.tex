@@ -13,35 +13,35 @@ Alternative to visiting pipeline sites, operators often use computer-based decis
 
 Most simply, these DSSs allow operators to coalesce and study geographic, demographic, and remote sensor data relevant to pipeline integrity management. A whole lot of worthwhile DSS data is already recorded, stored, and made available for analysis, but it's scattered across physical and digital formats and locations~\cite{Dunning2013}. As such, pipeline operators are left to pick and choose smaller subsets of attainable and manageable inputs for analysis, which can end up painting an incomplete picture.
 
-Chapter~\ref{requirements} describes specific system requirements that have been developed alongside our industry partners to meet their primary needs.
+Chapter~\ref{requirements} describes specific system requirements that have been developed alongside our industry partners to meet their primary data aggregation and analysis needs.
 
 \section{Contributions}
 The remainder of this document describes implemented, deployed, and validated software for improving the amount and quality of data available to pipeline operator DSSs. We've dubbed the project \textit{REST Access for Pipeline Integrity Data} (RAPID).
 
-More specifically, RAPID allows third-party applications to manage and query an arbitrary number of disparate geographic data sources through one REST API. Rather than leaving DSSs and their users to identify, model, convert between, and store dozens of data formats and repositories, our system takes responsibility for and hides that trivia---instead exposing simple REST calls for more consistency and centralization.
+More specifically, RAPID allows third-party applications to manage and query an arbitrary number of disparate geographic data sources through one REST API. Rather than leaving DSSs and their users to identify, model, convert between, and store dozens of data formats and repositories, our system manages and hides that trivia---instead exposing simple REST calls for more consistency and centralization.
 
 \subsection{Geospatial Data Model}
 A lot of geospatial data\footnote{\textit{Spatial} or \textit{geospatial} data is data associated with a point or region in space. This is discussed further in Section~\ref{background_intro}.} is conceptually alike because it pairs a physical location or demarcation with information about that place. The crux of the problem from Section~\ref{Problem} is that there are numerous and varied formats and access methods for those geospatial data sets, but with appropriate modeling and processing, they can each be stored, modified, and queried in approximately the same way.
 
-RAPID is built on a PostgreSQL database with the PostGIS geospatial extension added and enabled. Very basically, the schema stores geometries and quantities located on Earth's surface as well as relevant metadata. The design and implementation of RAPID's data model was this author's significant contribution; my thesis documents the process and peculiarities of building that model for real-world pipeline integrity management.
+RAPID is built on a PostgreSQL database with the PostGIS geospatial extension added and enabled. The schema stores geometries and quantities located on Earth's surface (as well as relevant metadata). The design and implementation of the data model was this author's significant contribution to RAPID; my thesis documents the process and peculiarities of building that model for real-world pipeline integrity management.
 
 \subsection{REST API}
-While the database itself will not be directly accessible to external users, developers and applications can interact with the aggregated content through a well-defined REST API. The API provides means of looking up geospatial data for particular regions, as well as necessary metadata for its use and interpretation.
+While the database itself will not be directly accessible to external users, developers and applications can interact with the aggregated content through a well-defined REST API. The API provides means of looking up geospatial data for particular regions, as well as necessary metadata and documentation for its use and interpretation.
 
-As a crude example, this allows API users to make a request like ``retrieve all rain data for California in JSON'' as well as a request like ``retrieve all \textit{seismic} data for California in JSON.'' The rain data may have originated as CSV files from portable weather stations; the seismic data could have come from a Shapefile on a government server. The point is that customers can view and download wildly different forms of data from wildly different sources in a mostly-standard and interchangeable fashion.
+As a crude example, this allows API users to make a request like ``retrieve all rain data for California in JSON'' as well as a request like ``retrieve all \textit{seismic} data for California in JSON.'' The rain data may have originated as CSV files from portable weather stations; the seismic data could have come from a Shapefile on a government server. The point is that customers can view and download wildly different forms of data from wildly different sources in a mostly-standard and interchangeable fashion.\footnote{We discuss particulars of some of these different formats in Section~\ref{background_formats}.}
 
-The REST API is the focus of Alexa Francis's master's thesis. That document covers the API's style and usage, with considerations for third-party developers as well as \textit{our} system design and data model.
+The REST API is the focus of Alexa Francis's master's thesis. That document covers the API's implementation and usage, with considerations for third-party developers and our internal system architecture.
 
 \subsection{Organization and architecture}
-Although of secondary importance to the data storage model and public interface, sensible organization of our codebase and business logic were also necessary for a successful implementation. We also discuss the high-level modules and data flow that span the object model and API. Our design decisions specifically aim for flexibility, clarity, and robustness, as further development could be in the works for RAPID.
+Although of secondary importance to the data storage model and public interface, sensible organization of our codebase and business logic were also necessary for successful implementation. Later chapters discuss the high-level modules and data flow that span the object model and API. Our design decisions specifically aim for flexibility, clarity, and robustness, as there might be further development in the works for RAPID.
 
 \subsection{Data analysis proof of concept}
 \label{polyview_intro}
-Lastly, serving to validate our system, an external web application has been transformed to use RAPID, both adding and retrieving geospatial data. This additional application, PolyView, aggregates and indexes several datasets relevant to Cal Poly, including class schedules and the campus map.
+Lastly, serving to validate our system, an external web application has been transformed to use RAPID---both adding and retrieving geospatial data. This additional application, PolyView, aggregates and indexes several datasets relevant to Cal Poly, including class schedules and the campus map.
 
 PolyView utilizes the RAPID API to store building locations and associated properties. This enables PolyView to later perform quick and easy location-based queries with only HTTP requests. This would normally require custom-built logic for spatial processing or integration with other third-party libraries.
 
-We also use PolyView as a testbed for performance measurements and optimization. While RAPID is not stress-tested in this fashion (it doesn't compare to the scope of a pipeline-covered continent), it does give a sense of system efficiency and stability during actual, on-demand work.
+We've also used PolyView as a testbed for performance measurements and optimization. While RAPID is not stress-tested in this fashion (it doesn't compare to the scope of a pipeline-covered continent), it does give a sense of system efficiency and stability during real, on-demand work.
 
 % \subsection{Data Management Dashboard}
 % Lastly, a web dashboard for data management was created for customers, which lets them add, update, and remove tracked geospatial features. When someone points the dashboard at an input data set, it's cleaned, parsed, and added to the integrated database. The user interface and application functionality are robust and friendly enough to handle the most common input formats, and they allow for intuitive viewing and modification of previously-added data.
