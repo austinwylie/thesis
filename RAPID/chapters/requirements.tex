@@ -97,11 +97,8 @@ RAPID's permission model is not overly complicated, but it does have to be preci
 At a high level, layers require Owners that decide their visibility. Non-Owners can be made Viewers or Editors for accessing or modifying data, respectively. This lets users specify exactly which other users can work with layers that they create; RAPID provides authentication capabilities for these users and ensures requestors and curators operate within their assigned privileges.
 
 \section{Modularity and abstraction}
-While this is not an explicit technical requirement, the system architecture should be modular---easily-maintainable and -updateable, with concerns separated. This is for several reasons:
+While this is not an explicit technical requirement, the system architecture should be modular---separation of concerns and easily-maintainability. This is for a few reasons:
 
-RAPID will likely see further development in the next several years with different software engineers and stakeholders. Based on conversations we've had privately and with industry partners, it's clear that RAPID could act as a platform for data aggregation, monitoring, and retrieval, enabling more extensive features
+RAPID will likely see further development in the next several years with different software engineers and stakeholders. We've come to understand that, while the current RAPID system is a powerful tool for many geospatial operations, we recognize the demand for a broader platform of data aggregation, monitoring, and retrieval, allowing more extensive features down the road. More advanced functionality should often fit into the models and workflows we've already created; for those that don't, the RAPID codebase still must be flexible enough to incorporate new work without entirely pulling existing features apart and recreating large components from scratch.
 
-Need to build on our work, not pull it apart and recreate large components from scratch.
-
-
-encryption... parsers
+From discussions with external partners, we've heard that potential add-ons could be support for additional file formats or even data encryption. New developers should be able to join the project, understand the system design quickly, and then add functionality wherever and whenever it most belongs.
