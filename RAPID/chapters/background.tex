@@ -9,9 +9,9 @@ RAPID's connected DSSs make use of spatial data;\footnote{\textit{Spatial} versu
 RAPID manages the spatial database component and also has to account for geographic information systems' (GIS) mathematical foundations. This chapter describes basic GIS concepts and requisite information for geospatial database management systems, structured and unstructured geospatial data, and related standards. These have all played into RAPID's motivations and implementation.
 
 \subsection{Open Geospatial Consortium}
-The Open Geospatial Consortium (OGC) is an international consortium---originating in 1994---with several hundred industry, government, and academic participants. Its goal is to establish standard formats and interfaces for geospatial data and applications. They've created over thirty-five standards, usually in the form of markup, modeling, or query languages as well as API specifications~\cite{ogc}.
+The Open Geospatial Consortium (OGC) is an international consortium---originating in 1994---with several hundred industry, government, and academic participants. Its goal is to establish standard formats and interfaces for geospatial data and applications. They've created over thirty-five standards, usually API specifications or markup, modeling, or query languages~\cite{ogc}.
 
-Many organizations insist on using OGC-compliant products and services to promote robustness and interoperability. RAPID implements components of several OGC Standards. While not a top-to-bottom OGC-standardized system, RAPID is partway there and still useful because it builds on the same foundational concepts.
+Many organizations insist on using OGC-compliant products and services to promote robustness and interoperability. RAPID implements components of several OGC Standards. While not a top-to-bottom OGC-compliant system, RAPID utilizes and implements standard functionality and is still useful for building on the same foundational concepts.
 
 \section{GISs}
 A GIS is a computer system (including hardware and software) for working with geographic data---that is, data associated with a location in space~\cite{Esriintro}. Quite simply, GISs provide a means of managing and analyzing this data. More importantly, GISs allow people to understand deep, complex information about geographic locations, their relative positions, and the objects and conditions that are located there~\cite{Esriintro}.
@@ -45,7 +45,7 @@ Vector files contain mathematical and geometric representations of spatial data-
 \paragraph{Coordinate pair series}
 Coordinate pairs are two values that represent a point in space in a coordinate system. Most commonly, this is the geographic coordinate system, where one value is latitude and other value is latitude. Taken together, any point on Earth's surface can be represented~\cite{gentle_intro}.\footnote{Geographic projections and digital coordinate system specifications are a large area of study. RAPID cannot entirely ignore these considerations and distinctions, but once a few database and parser options are set, we can mostly set those concerns aside. This is discussed in Section~\ref{design_srid}.}
 
-In vector files, sequences (or ``series'') of these points can represent different cartographic concepts. There are points, lines, linestrings, and polygons:
+In vector files, sequences (or ``series'') of these points can represent different cartographic concepts. There are points, lines, linestrings, and polygons (seen in Figure~\ref{fig:geoms}):
 
 \begin{description}
   \item[Points] Points are single instances of the points described above: they represent a single point in space.
@@ -75,8 +75,8 @@ The above can be extended to include polygons with holes. Imagine mapping Califo
        \hfill
 \subfloat[Multipolygon with hole]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/multipolygon_with_hole.png}}
     
-    \caption{Three simple graphs}
-    \label{fig:three graphs}
+    \caption{Standardized geometries from OGC's Abstract Specification}
+    \label{fig:geoms}
     
 \end{figure}
 
@@ -151,7 +151,47 @@ FROM geometries;
 These SQL statements demonstrate the creation of four geometries in a geospatial database: a single point, multiple connected strings, polygons with and without holes, and a generic collection of some of those same types.
 
 \subsubsection{Querying}
-An OGC Standard for querying geometries, Simple Feature Access (ISO 19125)~\cite{}, defines several required methods for comparing and relating them:
+An OGC Standard for querying geometries, Simple Feature Access (ISO 19125), defines several required methods for comparing and relating them, which are summarized below~\cite{}. Figures~\ref{fig:touches} through~\ref{fig:within} help visualize four of these boolean relational operators.
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.45\textwidth]{figures/touches.png}
+    
+    \caption{Geometries exemplifying the `Touch' relationship}
+    \label{fig:touches}
+    
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.4\textwidth]{figures/crosses.png}
+    
+    \caption{Geometries exemplifying the `Cross' relationship}
+    \label{fig:crosses}
+    
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.5\textwidth]{figures/overlap.png}
+    
+    \caption{Geometries exemplifying the `Overlap' relationship}
+    \label{fig:overlap}
+    
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.45\textwidth]{figures/within.png}
+    
+    \caption{Geometries exemplifying the `Within' relationship}
+    \label{fig:within}
+    
+\end{figure}
 
 \begin{description}
   \item[Equals] Tests for equality of two geometries.
@@ -166,6 +206,7 @@ An OGC Standard for querying geometries, Simple Feature Access (ISO 19125)~\cite
 \end{description}
 
 It's easy to see where and why these come in handy. As a simple example, imagine that a mobile device stores its geographic location---a point---and is trying to determine the city it's currently in. If a GDBMS stores borders (polygons) for cities, a query can be performed that asks if the point is contained within cities' borders.
+
 
 The queries below show some functions that are unique to geospatial data: the first selects the neighborhood(s) that the Broad Street subway station is located in, and the second selects points of interest within 1609 meters of any road.
 
@@ -191,9 +232,7 @@ This type of analysis can be done application-side (as opposed to in the databas
 As can generally be the case with file formats and proprietary or fragmented software, geographic file formats are numerous and varied. Several formats come from cartographic- and surveillance-focused government agencies, like the United States Geological Survey and the National Geospatial-Intelligence Agency. Other particular GIS applications may have their own file considerations and requirements.
 
 \subsubsection{Esri Shapefiles}
-A go-to file format for vectors is Esri's shapefile, which includes the two vector features described above, attributes and point data.
-
-Despite its singular name, a ``Shapefile'' is actually a set of several different file types:
+A go-to file format for vectors is Esri's shapefile, which includes the two vector features described above, attributes and point data. Despite its singular name, a ``Shapefile'' is actually a set of several different file types:
 
 \begin{description}
   \item[\tt{.shp}] These files contain the actual shape geometries.
