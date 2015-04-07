@@ -56,8 +56,32 @@ In vector files, sequences (or ``series'') of these points can represent differe
 
 The above can be extended to include polygons with holes. Imagine mapping California's land: where there are bodies of water on the map, there are simply holes in the polygon~\cite{gentle_intro}.
 
+\begin{figure}
+    \centering
+
+      \subfloat[Point]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/point.png}}
+      \hfill
+        \subfloat[Multipoint]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/multipoint.png}}
+        \hfill
+\subfloat[Linestring]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/linestring.png}}
+       \hfill
+\subfloat[Multilinestring]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/multilinestring.png}}
+
+      \subfloat[Polygon]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/polygon.png}}
+      \hfill
+        \subfloat[Polygon with hole]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/polygon_with_hole.png}}
+        \hfill
+\subfloat[Multipolygon]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/multipolygon.png}}
+       \hfill
+\subfloat[Multipolygon with hole]{\label{fig:a}\includegraphics[width=0.2\textwidth]{figures/multipolygon_with_hole.png}}
+    
+    \caption{Three simple graphs}
+    \label{fig:three graphs}
+    
+\end{figure}
+
 \paragraph{Attributes}
-Attributes are simply non-spatial data that's associated with the spatial data described above. An address, as mentioned above, is a great example of this: house numbers, streets, city, state, and zip code all associate an identifier with a point in space or other spatial concept (likely both!)~\cite{gentle_intro}.
+Attributes are simply non-spatial data that's associated with the spatial data described above. An address, as mentioned above, is a great example of this: house numbers, streets, cities, states, and zip codes all associate an identifier with a point in space or other spatial concept~\cite{gentle_intro}.
 
 \subsubsection{Raster}
 Raster data is simply made up of grids of values. It's best to imagine a digital image: pixels arranged in a grid are each assigned red, green, and blue color values, and when they're appropriately combined and visualized, a continuous dataset is spread over a grid in two or three dimensions~\cite{gentle_intro}.
