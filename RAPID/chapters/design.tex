@@ -10,7 +10,7 @@ Our primary goal, here, is to clarify and defend RAPID's high-level data model a
 Of further note, the system design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model could be implemented in any number of procedural programming languages and GDBMSs.\footnote{Chapter~\ref{implementation} covers our motivations for eventually creating RAPID with Django (a powerful web framework for Python) and PostGIS (a Django-compatible GDBMS).}
 
 \section{Geospatial data modeling and organization}
-Taken together, a subset of RAPID object models enables structured data storage and retrieval for geographic features. In other words, these components could stand on their own, letting users browse and analyze geospatial objects (and groups of geospatial objects), which fulfills our central database requirements. For the moment, we hold off discussing secondary functionality like permissioning and GeoViews.
+Taken together, a subset of RAPID classes enables structured data storage and retrieval for geographic features. In other words, these components could stand on their own, letting users browse and analyze geospatial objects (and groups of geospatial objects), which fulfills our central database requirements. For the moment, we hold off discussing secondary functionality like permissioning and GeoViews.
 
 \subsection{Feature}
 We first describe the core makeup for \textit{features} in RAPID---that is, real geographic entities combined with other noteworthy indicators---and how they're presented to third parties.
@@ -34,7 +34,7 @@ The Feature model comprises the following:
   \item[Properties] \hfill \\
   An unlimited-length properties string bundles other relevant fields in a Feature; structured key-value stores are the norm for handling arbitrary information in GIS features. Therefore, it's reasonable to choose an intuitive data interchange format like JSON for storage. When shaping RAPID's usage style and conventions, we specifically wanted to support JSON because our implementation leans on GeoJSON and the REST API already handles JSON requests~\cite{alexa}.
   
-  This inclusion introduces the ability to store and retrieve virtually any data for the Earth's surface (assuming it's serializable to JSON). For users that need the functionality, this lets them also perform more advanced filtering and analysis on sets of Features client-side---using information other than just shape and location.
+  Properties introduce the ability to store and retrieve virtually any data for the Earth's surface (assuming it's serializable to JSON). The users that need extra functionality client-side can then perform more advanced filtering and analysis with information other besides just shape and location.
   
   \item[Unique identifier] \hfill \\
   We use a public, user-facing unique identifier (UID) for direct Feature look-ups. While these could be any kind of unique value type, RAPID automatically generates textual UIDs upon Feature creation that are URL-safe and user-friendly (in that they're relatively short and use everyday numbers and letters).\footnote{We landed on this particular UID terminology for RAPID. An ``ID'' already gets used internally for back-end database work, and ``GUID'' (globally-unique identifier) is an existing standard for generating object identifiers. Our UID makes use of the GUID standard behind the scenes, but they're not one and the same.}
@@ -60,9 +60,9 @@ Chapter~\ref{requirements} already provided some examples and reasoning for logi
 \subsection{DataLayer}
 DataLayers exist to usefully store multiple similarly-structured Features from one source. Although there is a notion of layers in the Abstract Specification, RAPID diverges from any of their detailed considerations and only keeps the spirit of categorization---hence the rename.
 
-While RAPID doesn't enforce a consistent structure on properties, we'd expect them to be similar within a DataLayer so that they can be analyzed consistently. Although a misnomer, a DataLayer's Features could be thought of as instances of the layer that \textit{likely} have similar schemas to each other.
+While RAPID doesn't enforce a consistent structure on properties, we'd expect them to be similar within a DataLayer so that they can be analyzed consistently. Although a misnomer, a DataLayer's Features can be imagined as \textit{instances} of the layer descriptor, because of their similar schemas.
 
-DataLayers begin with these fields:
+DataLayers start out with these fields:
 
 \begin{description}
 
@@ -73,11 +73,11 @@ DataLayers use the same UIDs as Features. While the larger string size isn't as 
 As a simple user-friendly and -facing title for DataLayers, we include a short Descriptor text field. The Descriptor labels the set of contained Features; ``Earthquake'' and ``Construction equipment'' are reasonable examples.
 
 \item[Properties] \hfill \\
-To mirror the properties capabilities in Features, we store JSON metadata in DataLayers (and we leave it up to interface callers to define the fields). Use of the metadata is optional, but it sometimes includes important documentation for Features' properties.
+To mirror the properties capabilities in Features, we store JSON metadata in DataLayers (and we leave it up to 3rd parties to define the fields). Use of the metadata is optional, but it sometimes includes important documentation for Features' properties.
   
 \end{description}
 
- We haven't done the performance testing to determine real-world tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers. Even though there \textit{could} be some significant efficiency improvements to explore (one check against a DataLayer bounding box could avoid costly calculations on, potentially, thousands or millions of Feature geometries), it'd be complex to keep the dimensions up to date: as soon as Features change within a DataLayer, the bounding box has to be recalculated over all the Features.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code, but it's outside our current scope of work.}
+ We haven't carried out performance testing to determine the real-world tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers, even though there \textit{could} be some significant efficiency improvements to explore: one check with a DataLayer bounding box can avoid costly calculations on thousands of Features. It'd be somewhat more complex, however, to keep the bounding dimensions up to date: as soon as Features change within a DataLayer, the bounding box has to be recalculated.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code, but it's outside our current scope of work.}
 
 \subsection{Feature}
 To accommodate DataLayers, we needed to add an extra field to Features to specify the DataLayer they belong to:
@@ -85,7 +85,7 @@ To accommodate DataLayers, we needed to add an extra field to Features to specif
 \begin{description}
 
 \item[DataLayer foreign key] \hfill \\
-A foreign key references the Feature's DataLayer---the layer's ID. Note that this is a many-to-one relationship (and the primary reason the relationship is directed from Feature to DataLayer).\footnote{This doesn't, however, preclude us from traversing the relationship in the other direction, seeing all the Features for a DataLayer. That alternative action is common enough, and we later see the easy implementation for it.}
+A foreign key references the Feature's DataLayer---the layer's ID. Note that this is a many-to-one relationship (and the primary reason the relationship is directed from Feature to DataLayer).\footnote{This doesn't, however, preclude us from traversing the relationship in the other direction, seeing all the Features for a DataLayer. That alternative action is common enough, and we later see an easy implementation for it.}
 
 \end{description}
 
