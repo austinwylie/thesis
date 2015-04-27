@@ -1,5 +1,5 @@
 \documentclass[12pt]{ucthesis}
-
+% \usepackage{gensymb}
 \usepackage{etex}
 \usepackage[morefloats=125]{morefloats}
 \usepackage[hyphens]{url}
@@ -24,6 +24,8 @@
 \usepackage[]{algorithm2e}
 \usepackage{fancyvrb}
 \usepackage{caption}
+\usepackage{textcomp}
+
 % \usepackage{subcaption}
 
 \makeindex
@@ -34,6 +36,16 @@
 \setlength{\parindent}{0.25in} \setlength{\parskip}{6pt}
 \geometry{verbose,nohead,tmargin=1in,bmargin=1in,lmargin=1.5in,rmargin=1in}
 \setcounter{tocdepth}{2}
+
+
+\let\oldFootnote\footnote
+\newcommand\nextToken\relax
+
+\renewcommand\footnote[1]{%
+    \oldFootnote{#1}\futurelet\nextToken\isFootnote}
+
+\newcommand\isFootnote{%
+    \ifx\footnote\nextToken\textsuperscript{,}\fi}
 
 % Different font in captions (single-spaced, bold) ------------
 \newcommand{\captionfonts}{\small\bf\ssp}
@@ -63,7 +75,6 @@
 \input{frontmatter}
 
 \maketitle
-
 \begin{frontmatter}
 
 % Custom made for Cal Poly (by Mark Barry, modified by Andrew Tsui).

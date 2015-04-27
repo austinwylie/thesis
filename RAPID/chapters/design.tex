@@ -1,13 +1,189 @@
 \chapter{Design}
 \label{design}
 
-RAPID was designed to fulfill Chapter~\ref{requirements}'s enumerated system requirements.
+% TODO: Reference specific requirements from previous chapter.
 
-% It seems natural to begin this discussion where a user or client application would begin their interactions with RAPID: adding data to the system.
+We designed RAPID to fulfill Chapter~\ref{requirements}'s enumerated system requirements. This chapter focuses on our conceptual framework for achieving that desired functionality. Moving from abstract to concrete, Chapter~\ref{implementation} details our process and results for converting these specifications to deployed source code---mapping broader logical entities to specific modules, methods, and tables in Python and SQL.
+
+Our primary goal, here, is to clarify and defend RAPID's high-level data model and data flows. We describe basic storage and querying (as well as constraints)---continuing to build on the discussed standards---and then progress to logic for more complex business rules and ancillary features.\footnote{Although this narrative and the provided diagrams reveal a lot about RAPID's system architecture, this chapter tackles each interface-level activity, and we discuss additions to previous models only as they're needed. This demonstrates design flexibility: we can readily accommodate a variety of features over time. Fuller, collated model specifications are found in Chapter~\ref{implementation}.}
+
+Of further note, the system design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model could be implemented in any number of procedural programming languages and GDBMSs.\footnote{Chapter~\ref{implementation} covers our motivations for eventually creating RAPID with Django (a powerful web framework for Python) and PostGIS (a Django-compatible GDBMS).}
+
+\section{Geospatial data modeling and organization}
+Taken together, a subset of RAPID object models enables structured data storage and retrieval for geographic features. In other words, these components could stand on their own, letting users browse and analyze geospatial objects (and groups of geospatial objects), which fulfills our central database requirements. For the moment, we hold off discussing secondary functionality like permissioning and GeoViews.
+
+\subsection{Feature}
+We first describe the core makeup for \textit{features} in RAPID---that is, real geographic entities combined with other noteworthy indicators---and how they're presented to third parties.
+
+We saw in Chapter~\ref{background} that Geometry is the most generic and encompassing geospatial data type,\footnote{Remember that the Abstract Specification models these types hierarchically: a Polygon is a Polygon with holes, and a Polygon with holes is a Geometry, and so forth.} and we also discussed that geospatial features correlate those mathematically-defined geometries with other descriptive attributes. A RAPID Feature object is mostly a recreation of features from the Abstract Specification. There are some minor, system-specific additions, but the purpose is similar enough that we borrow the overall term and model.
+
+The Feature model comprises the following:
+
+\begin{description}
+  \item[Geometry] \hfill \\
+  A Geometry object represents the real-world footprint of the Feature (whether it's a Polygon, Line, Point, etc.). Functions from the OGC Standard can also be used to highlight various spatial characteristics like length, area, or circumference---calculations and descriptions people use everyday. 
+  
+  Comparing two or more geometries (with the earlier-discussed boolean relational operators) can reveal useful patterns, too. Note, however, that many different coordinate systems and map projections exist, and they aren't necessarily compatible with each other. OGC standardizes unique Spatial Reference System Identifiers (SRIDs) in the Simple Features specification to differentiate coordinate systems. To correctly use one of the relational operators, geometries must be in the same SRID.
+  
+   In common with other GIS defaults, we specify RAPID Features to use SRID 4326, the standard World Geodetic System (WGS 84). WGS 84 utilizes the latitudes and longitudes most people know (from -90\textdegree~to 90\textdegree~and -180\textdegree~to 180\textdegree, respectively), and it's the system used for GPS. Features imported into RAPID with other SRIDs must (and can) be transformed to SRID 4326 before performing spatial queries.\footnote{This process is briefly described in~\ref{}.}
+   
+   For simplicity, RAPID does not handle elevations in a geometry, but this is usually fine for our pipeline operating partners: most relevant datasets are two-dimensional---the features are located on the Earth's surface (or at least within tens of feet). When importing Features into RAPID, we only store the first two dimensions.
+   
+   This missing third dimension is not related to the querying process (we never planned to allow Feature filtering based on height); it only matters in data visualization or other analyses. As an easy workaround on the user's end, the elevation could be ported rather easily to the Feature's properties, instead of residing in the Geometry.
+  
+  \item[Properties] \hfill \\
+  An unlimited-length properties string bundles other relevant fields in a Feature; structured key-value stores are the norm for handling arbitrary information in GIS features. Therefore, it's reasonable to choose an intuitive data interchange format like JSON for storage. When shaping RAPID's usage style and conventions, we specifically wanted to support JSON because our implementation leans on GeoJSON and the REST API already handles JSON requests~\cite{alexa}.
+  
+  This inclusion introduces the ability to store and retrieve virtually any data for the Earth's surface (assuming it's serializable to JSON). For users that need the functionality, this lets them also perform more advanced filtering and analysis on sets of Features client-side---using information other than just shape and location.
+  
+  \item[Unique identifier] \hfill \\
+  We use a public, user-facing unique identifier (UID) for direct Feature look-ups. While these could be any kind of unique value type, RAPID automatically generates textual UIDs upon Feature creation that are URL-safe and user-friendly (in that they're relatively short and use everyday numbers and letters).\footnote{We landed on this particular UID terminology for RAPID. An ``ID'' already gets used internally for back-end database work, and ``GUID'' (globally-unique identifier) is an existing standard for generating object identifiers. Our UID makes use of the GUID standard behind the scenes, but they're not one and the same.}
+  
+  It's worth noting that our UIDs are generated randomly (with a secure random number generator) and end up being 22 bytes. An integer identifier would be reasonable too (especially with some slight indexing efficiencies over a longer string), but random strings won out:
+  
+  \begin{itemize}
+  \item Features are the most numerous object type in RAPID. While we wouldn't expect to easily max out a 32- or 64-bit number, 22 bytes erases any worry of integer overflow when deployed over a wide area and many years.\footnote{The same argument could be made with fewer bytes: the library we're using happens to use 22.}
+  \item We don't want identifiers to indicate ordering, magnitude, or chronology for Features: the UID should look more like a hash, as proximate integers could otherwise imply a relevant or analyzable relationship.
+  \item Following that logic, a random string is helpful from a security standpoint. One organization could theoretically share UIDs for all their classified Features in the open, but no one else would be able determine how new, old, or similar they are through the UID. An incrementing counter could otherwise hint at those characteristics.
+\end{itemize}
+  
+\item[Bounding box] \hfill \\
+  It's somewhat common for GIS features to include a bounding box attribute---defining the minimally-bounding rectangle for the geometry. The small number of coordinates in a bounding box can quickly estimate and rule out results in spatial operators.
+
+  RAPID does not currently make use of bounding box checks (although they could be useful in the future, pending performance tests). However, bounding boxes are a standardized attribute for Abstract Specification features (separate from the other key-value properties), so we store them anyway.
+  
+\end{description}
+
+\section{Data collections}
+Chapter~\ref{requirements} already provided some examples and reasoning for logically grouping Features. Here we discuss our method of doing so, using DataLayers.
+
+\subsection{DataLayer}
+DataLayers exist to usefully store multiple similarly-structured Features from one source. Although there is a notion of layers in the Abstract Specification, RAPID diverges from any of their detailed considerations and only keeps the spirit of categorization---hence the rename.
+
+While RAPID doesn't enforce a consistent structure on properties, we'd expect them to be similar within a DataLayer so that they can be analyzed consistently. Although a misnomer, a DataLayer's Features could be thought of as instances of the layer that \textit{likely} have similar schemas to each other.
+
+DataLayers begin with these fields:
+
+\begin{description}
+
+\item[UID] \hfill \\
+DataLayers use the same UIDs as Features. While the larger string size isn't as necessary for the number of DataLayers as it was with Features---they'll never be the same order of magnitude---we keep the same setup for consistency. We could partially truncate the UID for DataLayers (and other less-numerous types) if we had to be extra concerned about it.
+
+\item[Descriptor] \hfill \\
+As a simple user-friendly and -facing title for DataLayers, we include a short Descriptor text field. The Descriptor labels the set of contained Features; ``Earthquake'' and ``Construction equipment'' are reasonable examples.
+
+\item[Properties] \hfill \\
+To mirror the properties capabilities in Features, we store JSON metadata in DataLayers (and we leave it up to interface callers to define the fields). Use of the metadata is optional, but it sometimes includes important documentation for Features' properties.
+  
+\end{description}
+
+ We haven't done the performance testing to determine real-world tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers. Even though there \textit{could} be some significant efficiency improvements to explore (one check against a DataLayer bounding box could avoid costly calculations on, potentially, thousands or millions of Feature geometries), it'd be complex to keep the dimensions up to date: as soon as Features change within a DataLayer, the bounding box has to be recalculated over all the Features.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code, but it's outside our current scope of work.}
+
+\subsection{Feature}
+To accommodate DataLayers, we needed to add an extra field to Features to specify the DataLayer they belong to:
+
+\begin{description}
+
+\item[DataLayer foreign key] \hfill \\
+A foreign key references the Feature's DataLayer---the layer's ID. Note that this is a many-to-one relationship (and the primary reason the relationship is directed from Feature to DataLayer).\footnote{This doesn't, however, preclude us from traversing the relationship in the other direction, seeing all the Features for a DataLayer. That alternative action is common enough, and we later see the easy implementation for it.}
+
+\end{description}
+
+\section{File handling}
+Finish this section...
+
+\subsection{Importing}
+\subsubsection{On-demand}
+\subsubsection{Automatic}
+
+\subsection{Formats}
+\subsubsection{GeoJSON}
+\subsubsection{Shapefile}
+
+
+\subsection{Archive}
+\begin{description}
+\item[UID] \hfill \\
+\item[Internet media type] \hfill \\
+\item[Content] \hfill \\
+\item[Timestamp] \hfill \\
+\end{description}
+
+% Ran out of time ourselves, but gives the opportunity for future developers
+
+\section{Viewing and analysis}
+Finish this section...
+\subsection{GeoViews}
+
+\begin{description}
+\item[UID] \hfill \\
+\item[Descriptor] \hfill \\
+\item[Region geometry] \hfill \\
+\item[Bounding box] \hfill \\
+\item[Properties] \hfill \\
+\item[DataLayer collection] \hfill \\
+\end{description}
+
+
+% Rather analogous to standard SQL views
+
+
+% \section{Advanced querying and object modification}
+% Finish this section...
+
+% How to modify objects through interface.
 
 
 
-% Modification to "Feature" concept - we have additional properties
+
+\section{Permission management}
+Finish this section...
+
+\subsection{DataLayer}
+\begin{description}
+\item[Public flag] \hfill \\
+% DataLayers include a flag to indicate whether they're a \textit{public} DataLayer
+\end{description}
+
+\subsection{Role enum}
+We define three available roles for ApiTokens:
+
+\subsubsection{Owner}
+\subsubsection{Viewer}
+\subsubsection{Editor}
+
+
+\subsection{ApiToken}
+\begin{description}
+\item[Descriptor] \hfill \\
+\item[Key] \hfill \\
+\item[Timestamp] \hfill \\
+
+\end{description}
+
+\subsection{DataLayerRole}
+\begin{description}
+\item[ApiToken foreign key] \hfill \\
+\item[DataLayerRole foreign key] \hfill \\
+\item[Role enum] \hfill \\
+\end{description}
+
+\subsection{GeoViewRole}
+\begin{description}
+\item[ApiToken foreign key] \hfill \\
+\item[GeoViewRole foreign key] \hfill \\
+\item[Role enum] \hfill \\
+
+\end{description}
+
+
+
+
+% Could add user support to tokens down the road
+
+% Functionally, Features inherit permissions from their Layer.
+
+
 
 % Keep file around for various uses
 
@@ -33,3 +209,5 @@ RAPID was designed to fulfill Chapter~\ref{requirements}'s enumerated system req
 % \section{Geospatial data storage}
 
 % \section{Data import}
+
+% Takes into account requested activities/features, but left up to Alexa in the end.
