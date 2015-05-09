@@ -1,11 +1,11 @@
-\chapter{Design}
+\chapter{Design and Implementation}
 \label{design}
 
 % TODO: Reference specific requirements from previous chapter.
 
-We designed RAPID to fulfill Chapter~\ref{requirements}'s enumerated system requirements. This chapter focuses on our conceptual framework for achieving that desired functionality. Moving from abstract to concrete, Chapter~\ref{implementation} details our process and results for converting these specifications to deployed source code---mapping broader logical entities to specific modules, methods, and tables in Python and SQL.
+We designed RAPID to fulfill Chapter~\ref{requirements}'s discussed system requirements and guidelines. This chapter focuses on our conceptual framework for achieving that desired functionality. Moving from abstract to concrete, Chapter~\ref{implementation} details our process and results for converting these specifications to deployed source code---mapping broader logical entities to specific modules, methods, and tables in Python and SQL.
 
-Our primary goal, here, is to clarify and defend RAPID's high-level data model and data flows. We describe basic storage and querying (as well as constraints)---continuing to build on the discussed standards---and then progress to logic for more complex business rules and ancillary features.\footnote{Although this narrative and the provided diagrams reveal a lot about RAPID's system architecture, this chapter tackles each interface-level activity, and we discuss additions to previous models only as they're needed. This demonstrates design flexibility: we can readily accommodate a variety of features over time. Fuller, collated model specifications are found in Chapter~\ref{implementation}.}
+Our primary goal, here, is to clarify and defend RAPID's high-level data model and data flows. We describe basic storage and querying (as well as constraints)---continuing to build on the discussed standards---and then progress to logic for more complex business rules and ancillary features.
 
 Of further note, the system design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model could be implemented in any number of procedural programming languages and GDBMSs.\footnote{Chapter~\ref{implementation} covers our motivations for eventually creating RAPID with Django (a powerful web framework for Python) and PostGIS (a Django-compatible GDBMS).}
 
@@ -22,10 +22,6 @@ The Feature model comprises the following:
 \begin{description}
   \item[Geometry] \hfill \\
   A Geometry object represents the real-world footprint of the Feature (whether it's a Polygon, Line, Point, etc.). Functions from the OGC Standard can also be used to highlight various spatial characteristics like length, area, or circumference---calculations and descriptions people use everyday. Comparing two or more geometries (with the earlier-discussed boolean relational operators) can reveal useful patterns, too.
-  
-  Note, however, that there are many different coordinate systems and map projections, and they aren't necessarily compatible with each other. OGC standardizes unique Spatial Reference System Identifiers (SRIDs) to differentiate in-use coordinate systems. To correctly use one of the relational operator, the input geometries must have the same SRID.
-  
-  In common with other GIS defaults, we specify RAPID Features to use SRID 4326, the standard World Geodetic System (WGS 84).\footnote{WGS 84 utilizes the latitudes and longitudes most people know (from -90\textdegree~to 90\textdegree~and -180\textdegree~to 180\textdegree, respectively), and it's used in GPS.} Features imported into RAPID with other SRIDs must (and can) be transformed to SRID 4326 before performing spatial queries. This process is briefly described in~\ref{}.
    
    For simplicity, RAPID does not support elevations in a geometry. When importing Features, we only store the first two dimensions. This is usually fine for our pipeline operating partners: most relevant datasets are two-dimensional---the features are located on the Earth's surface (or at least within tens of feet). This missing third dimension is not related to the querying process (we never planned to allow Feature filtering based on height); it only matters in data visualization or other analyses. As an easy workaround on the user's end, the elevation could be ported rather easily to the Feature's properties, instead of residing in the Geometry.
   
