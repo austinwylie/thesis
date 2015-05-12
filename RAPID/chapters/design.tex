@@ -1,13 +1,110 @@
-\chapter{Design and Implementation}
+\chapter{Design and implementation}
 \label{design}
 
-% TODO: Reference specific requirements from previous chapter.
+We designed RAPID to fulfill Chapter~\ref{requirements}'s discussed system functionality and stylistic expectations. This chapter focuses on our conceptual framework for moving toward those requirements; going from abstract to concrete, we also detail the process for converting these specifications to deployed source code---mapping broader logical entities and actions to specific modules, methods, and tables in Python and SQL.
 
-We designed RAPID to fulfill Chapter~\ref{requirements}'s discussed system requirements and guidelines. This chapter focuses on our conceptual framework for achieving that desired functionality. Moving from abstract to concrete, Chapter~\ref{implementation} details our process and results for converting these specifications to deployed source code---mapping broader logical entities to specific modules, methods, and tables in Python and SQL.
+Of further note, RAPID's design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model, with minimal modifications, could be implemented in any number of different procedural programming languages and spatial DBMS.
 
-Our primary goal, here, is to clarify and defend RAPID's high-level data model and data flows. We describe basic storage and querying (as well as constraints)---continuing to build on the discussed standards---and then progress to logic for more complex business rules and ancillary features.
+One of our primary goals, here, is to spell out RAPID's data model and data flows. We describe basic storage and querying (as well as constraints)---continuing to build on the discussed standards---along with expected business rules and ancillary features. Among the high-level model descriptions, we share portions of source code and describe how we've used the Python-based Django web framework and PostGIS DBMS to implement RAPID.
+% \footnote{The tradeoffs we considered in the design and implementation are a particular focus too. Because GIS data and software is so diverse---with many large and changing standards---we had to balance}
 
-Of further note, the system design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model could be implemented in any number of procedural programming languages and GDBMSs.\footnote{Chapter~\ref{implementation} covers our motivations for eventually creating RAPID with Django (a powerful web framework for Python) and PostGIS (a Django-compatible GDBMS).}
+Our design decisions specifically aim for flexibility, clarity, and robustness, as there might be further development in the works for RAPID.
+
+
+ 
+
+\section{Introduction}
+We preface our contribution with a quick, helpful introduction to Django and a small summary on Francis's related API work. We, additionally, describe our general architecture for cross-module method calls and finish by outlining an example we'll continue for the rest of the chapter.
+
+\subsection{API design decisions}
+We first outline RAPID's specific design choices that fulfill and extend the initial system requirements in Chapter~\cite{Requirements}.
+
+In concert with Francis and regarding the requirements from Chapter~\ref{requirements}, we defined several high-level API calls and activities for customer software (some of which is broken into sub-steps and -activities):\footnote{The specific API syntax, in fact, isn't essential to our discussion here. We list external DSS' primary tasks when using RAPID, but more precise developer-focused documentation is found in Francis's thesis~\cite{Francis}.}
+
+In slightly more detail, these actions are made available in the REST API
+
+\begin{enumerate}
+  \item Create DataLayer instances, including metadata.
+  \item Import GeoJSON and Shapefiles, adding their geospatial features to to a designated DataLayer.
+  \item Create GeoView instances, including geometric boundaries and metadata.
+  \item Choose DataLayers for a GeoView.
+  \item Look-up and navigate between DataLayers, Features, and GeoViews.
+\end{enumerate}
+
+To handle permissions, each external system or organization (whoever or whatever is subject to permissioning considerations) is assigned a unique and private API token that identifies that entity to RAPID. For all of the above API activities, the caller must include their token to be identified and provided properly-privileged data.
+
+\subsection{Django usage with PostGIS}
+Here, let us see how to
+\begin{enumerate*}[label=\itshape\alph*\upshape)]
+\item define tables for and query a PostGIS database,
+\item use and convert geospatial data types in Python, and
+\item add and filter persistent data with our chosen architecture
+\end{enumerate*}.
+
+From using Django, we gained the ability to form spatial database models quickly and connect them to modular classes and algorithms in Python.
+
+% Move to later
+To expand on some database-specific nuances here: Django autogenerates surrogate primary keys business keys.
+
+% We progress quickly through some sections of implementation: several modules are simply straightforward Python or SQL mappings from our data model and system design.
+Because we explain this up front, move quicky through rest of it...
+
+\subsection{Chapter example}
+To aid the remainder of this discussion, we introduce a small (but reasonable) example of RAPID in use. Consider a scenario with two pipeline operating companies that seek to
+\begin{enumerate*}[label=\itshape\alph*\upshape)]
+\item import and modify public \textit{and} private data and
+\item create, share, and query GeoViews
+\end{enumerate*}.
+
+We imagine ABC Pipeline Co. and XYZ Operations both operate within SLO County, California, overseeing two pipelines: one in Paso Robles and one in Pismo Beach.\footnote{Paso Robles and Pismo Beach are both cities located within SLO County.} The two companies cooperatively monitor and manage the section of pipeline in Pismo Beach, and XYZ Operations exclusively operates the section of pipeline in Paso Robles.
+
+For pipeline integrity management, each organization gathers and processes relevant datasets, intending to add them to RAPID:
+
+\begin{itemize}
+ \item ABC Pipeline Co.
+ \begin{itemize}
+     \item Vehicle traffic
+     \begin{itemize}
+         \item Spans SLO county
+         \item Generated as Shapefiles
+     \end{itemize}
+     \item Construction equipment
+     \begin{itemize}
+         \item Spans SLO county
+         \item Generated as GeoJSON
+     \end{itemize}
+ \end{itemize}
+ 
+ \item XYZ Operations
+ \begin{itemize}
+     \item Rainfall
+     \begin{itemize}
+         \item Spans SLO county
+         \item Generated as GeoJSON
+     \end{itemize}
+     \item Ground movement
+     \begin{itemize}
+         \item Local to Paso Robles pipeline
+         \item Generated as Shapefiles
+     \end{itemize}
+ \end{itemize}
+\end{itemize}
+
+XYZ chooses to release their rainfall data publicly (to anyone who's willing to retrieve it from our system). The rest of the data, from both organizations, uses RAPID's permissioning system to allow shared access when required by business policies.
+
+Because ABC Pipeline Co. and XYZ Operations cooperate for the Pismo Beach pipeline region, ABC (the owner of vehicle traffic and construction equipment data for the county) shares resources with XYZ so that they can also perform analysis. And although ABC and XYZ want to look at the same data for the same pipeline region, the groups use different DSS: ABC's only reads GeoJSON, and XYZ's only reads Shapefiles.
+
+With the above considerations, the 
+
+At a high level, with the above considerations, this scenario entails
+\begin{enumerate*}[label=\itshape\alph*\upshape)]
+\item setting up API tokens,
+\item creating DataLayers,
+\item updating DataLayers with GeoJSON and Shapefiles,
+\item modifying permissions,
+\item creating and querying GeoViews, and
+\item exporting data in GeoJSON or Shapefiles
+\end{enumerate*}.
 
 \section{Geospatial data modeling and organization}
 Taken together, a subset of RAPID classes enables structured data storage and retrieval for geographic features. In other words, these components could stand on their own, letting users browse and analyze geospatial objects (and groups of geospatial objects), which fulfills our central database requirements. For the moment, we hold off discussing secondary functionality like permissioning and GeoViews.
@@ -127,7 +224,7 @@ As we discussed in Chapter~\ref{design}, RAPID must read from and write to a var
 Although our requirements do specify GeoJSON and Shapefile support, we know other parsing capabilities may be required soon. As such, we've structured the objects and interfaces so that additional file formats will be easily importable in the future.\footnote{In general, we've looked to future-proof these high-level interfaces so that they're more dependent on the Abstract Specification than any one format or library.}
 
 \subsection{Importing files}
-The multiplicity of spatial and geographic file specifications is mirrored by the huge number of options in parsing, writing, validating, and transforming them. Some tools are easier to use than others; some support files that others don't. Some GDBMSs will even handle encoding and decoding of popular formats natively. Therefore, we prioritize flexibility in the architecture for importing files and leave the implementation to fill in any blanks between the database and files.\footnote{We won't dive into any intricacies of file formats or parsers here. A few of our considerations for Shapefile support are discussed in Chapter 5. Otherwise, official documentation and other tutorials provide the most accurate and proper guidelines for parsing and validation. See~\cite{}.}
+The multiplicity of spatial and geographic file specifications is mirrored by the huge number of options in parsing, writing, validating, and transforming them. Some tools are easier to use than others; some support files that others don't. Some spatial DBMS will even handle encoding and decoding of popular formats natively. Therefore, we prioritize flexibility in the architecture for importing files and leave the implementation to fill in any blanks between the database and files.\footnote{We won't dive into any intricacies of file formats or parsers here. A few of our considerations for Shapefile support are discussed in Chapter 5. Otherwise, official documentation and other tutorials provide the most accurate and proper guidelines for parsing and validation. See~\cite{}.}
 
 RAPID accomplishes this through several abstract steps with a file parser:
 

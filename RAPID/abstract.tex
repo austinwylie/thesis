@@ -1,1 +1,7 @@
-This is my abstract!
+Several hundred thousand miles of energy pipelines span the whole of North America---responsible for carrying the natural gas and liquid petroleum that power the continent's homes and economies~\cite{PHMSA}. These pipelines, so crucial to everyday goings-on, are closely monitored by various operating companies to ensure they perform safely and smoothly~\cite{PHMSA2013}. 
+
+Happenings like earthquakes, erosion, and extreme weather, however---and human factors like vehicle traffic and construction---all pose threats to pipeline integrity. As such, there's a tremendous need to measure and indicate useful, actionable data for each region of interest, and operators often use computer-based decision support systems (DSS) to analyze and allocate resources for active and potential hazards~\cite{PHMSA2013,MichaelBakerJr.2008,Chastain,Dunning2013}.
+
+We designed and implemented a geospatial data service, \textit{REST API for Pipeline Integrity Data} (RAPID) to improve the amount and quality of data available to DSS. More specifically, RAPID (built with a spatial database and the Django web framework) allows third-party software to manage and query an arbitrary number of geographic data sources through one centralized REST API.
+
+Here, we focus on the process and peculiarities of creating RAPID's model and query interface for pipeline integrity management; this contribution describes the design, implementation, and validation that model, which builds on existing geographic standards.

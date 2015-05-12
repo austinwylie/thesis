@@ -3,17 +3,31 @@
 
 % PolyView validates requirements
 
+To verify, we make use of each of the exposed activities.
+
+To validate, we see that data is useful spatially.
+
+RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, (1) verify that RAPID's design meets it specification and (2) validate that our code base parses, converts, calculates, and outputs geospatial data \textit{correctly}.
+
+\section{Introduction}
+\subsection{Strategies}
+\subsection{PolyView integration}
 
 
+\section{Functionality verification}
+\subsection{Setup}
+\subsection{Results}
+Whether or not RAPID is completely bug-free, its design and feature set still must be verified against system requirements. This is particularly prudent, as part of its entire purpose is to enable portability and interchangeability for external partners. RAPID can be verified empirically with the following guidelines.
 
+There is a set of agreed-upon requirements for RAPID. These include the supported data formats, necessary data model considerations, and known querying features.
 
-% \section{Introduction}
-% RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, (1) verify that RAPID's design meets it specification and (2) validate that our code base parses, converts, calculates, and outputs geospatial data \textit{correctly}.
+With each of the above participant types represented sufficiently, participants consistently agreeing that core functionality is present would be the best indicator for a verified system. Mismatched ratings between groups may indicate a fundamental misunderstanding or misinterpretation in one conceptual area.
 
-% \section{Feature verification}
-% Whether or not RAPID is completely bug-free, its design and feature set still must be verified against system requirements. This is particularly prudent, as part of its entire purpose is to enable portability and interchangeability for external partners. RAPID can be verified empirically with the following guidelines.
+\section{Performance testing}
+\subsection{Setup}
+\subsection{Results}
 
-% There is a set of agreed-upon requirements for RAPID. These include the supported data formats, necessary data model considerations, and known querying features. These requirements can be summarized into short statements such as ``GeoJSON files can be added to the system'' or ``Atmospheric data can be retrieved for any region.'' Valid responses rank from 1 to 5---1 being ``Totally disagree'' and 5 being ``Totally agree.''
+% These requirements can be summarized into short statements such as ``GeoJSON files can be added to the system'' or ``Atmospheric data can be retrieved for any region.'' Valid responses rank from 1 to 5---1 being ``Totally disagree'' and 5 being ``Totally agree.''
 
 % A set of requirements (maybe fifteen of the central features) can be turned into the concise statements and presented to one of three  participant types, a creator, a user, or a third-party, along with access to RAPID and its documentation. RAPID's creators (us), should test the system from our perspective to ensure that we believe we've implemented the functionality as originally planned. Users, or customers, will provide good insight into whether they felt \textit{their} needs were met. Another third-party software developer or GIS expert can act as a tie-breaker of sorts, if there's too much uncertainty.
 
