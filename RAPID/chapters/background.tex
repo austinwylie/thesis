@@ -24,7 +24,7 @@ A GIS is a computer system (including hardware and software) for working with ge
 Because many everyday and large-scale tasks and concerns are related to specific locations, so too are the computer applications that people use: from flight scheduling to car navigation, weather prediction, and social networking~\cite{Esriintro}. RAPID and its related applications, with their geospatial data, enable similar possibilities.
 
 \paragraph{SDSS.}
-The terms ``GIS'' and ``SDSS'' sometimes overlap ambiguously~\cite{Peterson}. GIS might only involve general-purpose geography and cartography, but SDSS have the specific goal of improving geospatial analysis and resource management~\cite{Peterson}. As such, SDSS \textit{use} a GIS or could be considered a \textit{type} of GIS~\cite{Peterson}.\footnote{The actual analyses are outside our work's scope.}
+The terms ``GIS'' and ``SDSS'' sometimes overlap ambiguously~\cite{Peterson}. GIS might only involve general-purpose geography and cartography, but SDSS have the specific goal of improving geospatial analysis and resource management~\cite{Peterson}. As such, SDSS \textit{use} a GIS or could be considered a \textit{type} of GIS~\cite{Peterson}.\footnote{The actual SDSS analyses are outside our work's scope; however, partners are exploring novel improvements to their DSS~\cite{Dunning2013}.}
 
 \subsection{Functionality}
 GIS functionality can usually be placed in one of five categories~\cite{Esriintro}:
@@ -151,17 +151,9 @@ These SQL statements demonstrate the creation of four geometries in a geospatial
 In terms of notation, the space-separated numbers are a coordinate pair. Commas separate the points, creating ordered series. This particular syntax is Well-Known Text (WKT), an OGC Standard for defining Abstract Specification geometries~\cite{ogc}. Those five geometric data types in PostGIS---\texttt{POINT}, \texttt{LINE}, \texttt{LINESTRING}, and \texttt{POLYGON}---correspond to the types described above in Section~\ref{sec:vector}.
 
 \subsubsection{Querying}
-Simple Feature Access, introduced above, defines several required methods for comparing and relating Geometries, summarized below~\cite{SFA}. Figures~\ref{fig:touches} through~\ref{fig:within} visualize four of these boolean relational operators.
+Simple Feature Access, introduced above, defines several required methods for comparing and relating Geometries, summarized below~\cite{SFA}. Figures~\ref{fig:touches} through~\ref{fig:within} visualize four of these boolean relational operators, as examples.
 
-\begin{figure}
-    \centering
 
-    \includegraphics[width=0.45\textwidth]{figures/touches.png}
-    
-    \caption{Geometries exemplifying the `Touch' relationship}
-    \label{fig:touches}
-    
-\end{figure}
 
 \begin{figure}
     \centering
@@ -170,6 +162,16 @@ Simple Feature Access, introduced above, defines several required methods for co
     
     \caption{Geometries exemplifying the `Intersects' relationship}
     \label{fig:intersects}
+    
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.45\textwidth]{figures/touches.png}
+    
+    \caption{Geometries exemplifying the `Touch' relationship}
+    \label{fig:touches}
     
 \end{figure}
 
@@ -195,12 +197,12 @@ Simple Feature Access, introduced above, defines several required methods for co
 
 \begin{description}
   \item[Equals.] Tests for equality of two Geometries.
-  \item[Intersects.] Tests whether the interiors of Geometries intersect.
+  \item[Intersects.] Tests whether the interiors of Geometries intersect. See Figure~\ref{fig:intersects}.
   \item[Disjoint.] The opposite of intersection.
   \item[Cross.] Tests if the intersection of two Geometries is in one dimension fewer than the source Geometries.
-  \item[Overlap.] Determines if the intersection of two Geometries is different from both the source Geometries but of the same dimension.
-  \item[Touch.] Tests whether Geometries have their boundaries touching (without intersected interiors).
-  \item[Within and Contains.] Test if a Geometry is fully inside of another.
+  \item[Overlap.] Determines if the intersection of two Geometries is different from both the source Geometries but of the same dimension. See Figure~\ref{fig:overlap}.
+  \item[Touch.] Tests whether Geometries have their boundaries touching (without intersected interiors). See Figure~\ref{fig:touches}.
+  \item[Within and Contains.] Test if a Geometry is fully inside of another. See Figure~\ref{fig:within}.
   \item[Distance.] Calculates the shortest distance between two Geometries.
   \item[DWithin.] Tests whether Geometries are within a specified distance of each other.
 \end{description}
@@ -231,9 +233,9 @@ This type of analysis can be done application-side (as opposed to in the databas
 As can generally be the case with file formats and proprietary or fragmented software, geographic file formats are numerous and varied. Several come from cartographic- and surveillance-focused government agencies, like the United States Geological Survey and the National Geospatial-Intelligence Agency~\cite{UsgsStandards}. Other GIS vendors may have their own file considerations and requirements~\cite{slashgeo,Environ1998,GeoJSON}.
 
 \subsubsection{Esri Shapefiles}
-A go-to file format for vectors is Esri's shapefile, which includes the two vector components described above: attributes and point data~\cite{Environ1998}. Shapefiles are a (mostly) open and standard format managed and developed by Esri for use within the GIS space (and particularly their popular software, ArcGIS)~\cite{Environ1998}. Although this isn't an OGC Standard, it's become a ubiquitous vector format for GIS.\footnote{Interestingly, Shapefiles have begun to show their age (they originated in the early 1990s), and there were calls for a more modern, robust shapefile format from the OGC, which resulted in GeoPackage, a modern vector format based on SQLite. Shapefile's ubiquity and history keeps it in widespread use, however ~\cite{slashgeo,GeoPackage}.}
+A go-to file format for vectors is Esri's Shapefile, which includes the two vector components described above: attributes and point data~\cite{Environ1998}. Shapefiles are a (mostly) open and standard format managed and developed by Esri for use within the GIS space (and particularly their popular software, ArcGIS)~\cite{Environ1998}. Although this isn't an OGC Standard, it's become a ubiquitous vector format for GIS.\footnote{Interestingly, Shapefiles have begun to show their age (they originated in the early 1990s), and there were calls for a more modern, robust shapefile format from the OGC, which resulted in GeoPackage, a modern vector format based on SQLite. Shapefile's ubiquity and history keeps it in widespread use, however ~\cite{slashgeo,GeoPackage}.}
 
-Despite its singular name, a ``Shapefile'' is actually a set of several different file types~\cite{Environ1998}:
+Despite its singular name, a ``Shapefile'' is actually a set of several different file types (including but not limited to)~\cite{Environ1998}:
 
 \begin{description}
   \item[\tt{.shp}] These files contain actual shape geometries.

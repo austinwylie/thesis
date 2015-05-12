@@ -13,7 +13,7 @@ We discovered several geospatial data stores and aggregators, but RAPID's design
 \subsection{Web Feature Service}
 OGC's Web Feature Service (WFS) is a lengthy and highly-specific standard for geospatial data storage, formatting, and transmission~\cite{WFS}. Several existing reference implementations also exist~\cite{RefImpl}. While this complex, in-use standard outdoes RAPID's capabilities in some scenarios, there's currently no standard specification for spatial REST APIs~\cite{WFS}.
 
-This gives Francis and me the opportunity to create the ecosystem that we see fit---even allowing non-GIS developers to incorporate RAPID data relatively pain-free. Our validation software, PolyView,\footnote{Introduced in Section~\ref{polyview_intro} and detailed in~\ref{polyview_details}.} for instance, would not have the resources to interface with a WFS directly, but can still make use of RAPID because of its idiomatic REST API.
+This gives Francis and me the opportunity to create the ecosystem we see fit---even allowing non-GIS developers to incorporate RAPID data relatively pain-free. Our validation software, PolyView,\footnote{Introduced in Section~\ref{polyview_intro} and detailed in~\ref{polyview_details}.} for instance, would not have the resources to interface with a WFS directly, but can still make use of RAPID because of its idiomatic REST API.
 
 \subsection{FeatureServer}
 
@@ -60,9 +60,9 @@ Every five minutes, the United States Geological Survey (USGS) publishes a GeoJS
 While visible under the hood, RAPID won't reveal which features came from which files. Even data fetched from several different sources is, effectively, merged (that is, a pipeline operator could have more granular seismic data alongside the USGS feed); from then on, all seismic data is accessible through one uniform, queryable DataLayer.
 
 \subsection{Updatability}
-In the previous example, we alluded to RAPID's data modification capabilities and the expectation to regularly retrieve new data. Existing data sets---layers---need to seamlessly integrate new measurements as they become available.
+In the previous example, we alluded to RAPID's data modification capabilities and the expectation to regularly retrieve new data. Existing DataLayers need to seamlessly integrate new measurements as they become available.
 
-Similarly, stored data must be modifiable at the feature level through the API; users and applications should not have to edit and resubmit whole Shapefiles or GeoJSON files to slightly tweak the database. In this way, the entire procedure is programmable and allows for fine-grained manipulation when necessary.
+Similarly, stored data must be modifiable at the feature level through the API; users and applications should not have to edit and resubmit whole Shapefiles or GeoJSON files to slightly tweak stored objects. In this way, the entire procedure is programmable and allows for fine-grained manipulation when necessary.
 
 \section{Querying}
 

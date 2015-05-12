@@ -1,15 +1,18 @@
-\chapter{Verification and validation}
+\chapter{Validation}
 
+In this last chapter, we summarize our validation of RAPID, showing that the system meets Chapter~\ref{requirements}'s requirements, correctly uses the concepts and technologies outlined in our Background, and is efficient enough for real use in the future.
 
-% PolyView validates requirements
-
-To verify, we make use of each of the exposed activities.
-
-To validate, we see that data is useful spatially.
+\section{Introduction}
+\label{polyview_details}
 
 RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, (1) verify that RAPID's design meets it specification and (2) validate that our code base parses, converts, calculates, and outputs geospatial data \textit{correctly}.
 
-\section{Introduction}
+Whether or not RAPID is completely bug-free, its design and feature set still must be verified against system requirements. This is particularly prudent, as part of its entire purpose is to enable portability and interchangeability for external partners. RAPID can be verified empirically with the following guidelines.
+
+There is a set of agreed-upon requirements for RAPID. These include the supported data formats, necessary data model considerations, and known querying features.
+
+With each of the above participant types represented sufficiently, participants consistently agreeing that core functionality is present would be the best indicator for a verified system. Mismatched ratings between groups may indicate a fundamental misunderstanding or misinterpretation in one conceptual area.
+
 \subsection{Strategies}
 \subsection{PolyView integration}
 
@@ -17,11 +20,7 @@ RAPID includes a geospatial data model as well as file parsing and querying capa
 \section{Functionality verification}
 \subsection{Setup}
 \subsection{Results}
-Whether or not RAPID is completely bug-free, its design and feature set still must be verified against system requirements. This is particularly prudent, as part of its entire purpose is to enable portability and interchangeability for external partners. RAPID can be verified empirically with the following guidelines.
 
-There is a set of agreed-upon requirements for RAPID. These include the supported data formats, necessary data model considerations, and known querying features.
-
-With each of the above participant types represented sufficiently, participants consistently agreeing that core functionality is present would be the best indicator for a verified system. Mismatched ratings between groups may indicate a fundamental misunderstanding or misinterpretation in one conceptual area.
 
 \section{Performance testing}
 \subsection{Setup}
@@ -63,8 +62,7 @@ With each of the above participant types represented sufficiently, participants 
 % Data can move linearly up and down that list, but can not skip from the top to the bottom or vice versa. Each of those steps and transitions can also be viewed as a data integrity checkpoint that deserves a unit test. For instance, a polygon made up of bordering points (0, 0), (0, 10), and (10, 0) still needs to have the same meaning---a triangle with those three points---no matter where it's located. A GeoJSON file, a Python object, the WKT notation, and PostGIS queries and data structures can all be inspected to ensure that the same data is contained in each. If it isn't, the data was misshaped somewhere along the line that can, hopefully, be traced.
 
 % \section{PolyView}
-\label{polyview_details}
-\label{validation_bbox}
+
 
 
 % NOTES

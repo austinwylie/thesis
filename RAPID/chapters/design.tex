@@ -3,37 +3,40 @@
 
 We designed RAPID to fulfill Chapter~\ref{requirements}'s discussed system functionality and stylistic expectations. This chapter focuses on our conceptual framework for moving toward those requirements; going from abstract to concrete, we also detail the process for converting these specifications to deployed source code---mapping broader logical entities and actions to specific modules, methods, and tables in Python and SQL.
 
-Of further note, RAPID's design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model, with minimal modifications, could be implemented in any number of different procedural programming languages and spatial DBMS.
+Of further note, RAPID's design is mostly presented at the same level of abstraction as OGC's Abstract Specification---utilizing its standardized types and operators, just in an application-specific context. That is also to say, our model, with minimal modifications, could be implemented in any number of procedural programming languages and spatial DBMS. Our design decisions specifically aim for flexibility, clarity, and robustness, as there might be further development in the works.
 
 One of our primary goals, here, is to spell out RAPID's data model and data flows. We describe basic storage and querying (as well as constraints)---continuing to build on the discussed standards---along with expected business rules and ancillary features. Among the high-level model descriptions, we share portions of source code and describe how we've used the Python-based Django web framework and PostGIS DBMS to implement RAPID.
 % \footnote{The tradeoffs we considered in the design and implementation are a particular focus too. Because GIS data and software is so diverse---with many large and changing standards---we had to balance}
 
-Our design decisions specifically aim for flexibility, clarity, and robustness, as there might be further development in the works for RAPID.
 
 
- 
+
 
 \section{Introduction}
-We preface our contribution with a quick, helpful introduction to Django and a small summary on Francis's related API work. We, additionally, describe our general architecture for cross-module method calls and finish by outlining an example we'll continue for the rest of the chapter.
+We preface our contribution with a quick, helpful introduction to Django and a small summary on Francis's related API work. We, additionally, describe our chosen pattern for cross-module method calls and finish by outlining an example we'll continue for the rest of the chapter.
 
 \subsection{API design decisions}
 We first outline RAPID's specific design choices that fulfill and extend the initial system requirements in Chapter~\cite{Requirements}.
 
-In concert with Francis and regarding the requirements from Chapter~\ref{requirements}, we defined several high-level API calls and activities for customer software (some of which is broken into sub-steps and -activities):\footnote{The specific API syntax, in fact, isn't essential to our discussion here. We list external DSS' primary tasks when using RAPID, but more precise developer-focused documentation is found in Francis's thesis~\cite{Francis}.}
+In concert with Francis, and regarding the requirements from Chapter~\ref{requirements}, we defined several high-level API calls and activities for customer software (some of which is broken into sub-steps):\footnote{The specific API syntax, in fact, isn't essential to our discussion here. We list external DSS' primary tasks when using RAPID, but more precise developer-focused documentation is found in Francis's thesis~\cite{Francis}.}
 
-In slightly more detail, these actions are made available in the REST API
+In slightly more detail, these actions are made available to API customers:
 
 \begin{enumerate}
-  \item Create DataLayer instances, including metadata.
-  \item Import GeoJSON and Shapefiles, adding their geospatial features to to a designated DataLayer.
-  \item Create GeoView instances, including geometric boundaries and metadata.
-  \item Choose DataLayers for a GeoView.
-  \item Look-up and navigate between DataLayers, Features, and GeoViews.
+  \item Creating DataLayer instances, including metadata.
+  \item Importing GeoJSON and Shapefiles, adding their geospatial features to a designated DataLayer.
+  \item Creating GeoView instances, including geometric boundaries and metadata.
+  \item Choosing DataLayers for a GeoView.
+  \item Browsing and filtering DataLayers, Features, and GeoViews.
 \end{enumerate}
 
-To handle permissions, each external system or organization (whoever or whatever is subject to permissioning considerations) is assigned a unique and private API token that identifies that entity to RAPID. For all of the above API activities, the caller must include their token to be identified and provided properly-privileged data.
+To manage permissions, each external system is assigned a unique and private API token that identifies them to RAPID. In the above API activities, the caller must include their secure token to be identified and provided properly-privileged data.
 
 \subsection{Django usage with PostGIS}
+By using Django, we gained the ability to form spatial database models quickly and connect them to classes and algorithms in Python.
+
+Object-relational mapper
+
 Here, let us see how to
 \begin{enumerate*}[label=\itshape\alph*\upshape)]
 \item define tables for and query a PostGIS database,
@@ -41,7 +44,7 @@ Here, let us see how to
 \item add and filter persistent data with our chosen architecture
 \end{enumerate*}.
 
-From using Django, we gained the ability to form spatial database models quickly and connect them to modular classes and algorithms in Python.
+
 
 % Move to later
 To expand on some database-specific nuances here: Django autogenerates surrogate primary keys business keys.
@@ -56,63 +59,110 @@ To aid the remainder of this discussion, we introduce a small (but reasonable) e
 \item create, share, and query GeoViews
 \end{enumerate*}.
 
-We imagine ABC Pipeline Co. and XYZ Operations both operate within SLO County, California, overseeing two pipelines: one in Paso Robles and one in Pismo Beach.\footnote{Paso Robles and Pismo Beach are both cities located within SLO County.} The two companies cooperatively monitor and manage the section of pipeline in Pismo Beach, and XYZ Operations exclusively operates the section of pipeline in Paso Robles.
+We imagine ABC Pipeline Co. and XYZ Operations both operate within San Luis Obispo (SLO) County, California, overseeing two pipelines: one in Paso Robles and one in Pismo Beach.\footnote{Paso Robles and Pismo Beach: both cities in SLO County.} The two companies cooperatively monitor and manage the section of pipeline in Pismo Beach, and XYZ Operations exclusively operates the section of pipeline in Paso Robles.
 
 For pipeline integrity management, each organization gathers and processes relevant datasets, intending to add them to RAPID:
+\begin{table}
+\caption{Example pipeline operator datasets.}
+\begin{tabular}{ |l|l|l|l| }
+% \multicolumn{4}{ |c| }{Example datasets} \\
+\hline
+Organization & Data & Covered region & Input format\\
+\hline
+\multirow{2}{*}{ABC Pipeline Co.}
+ & Traffic densities & SLO County & Shapefiles \\ \cline{2-4}
+ & Construction equipment & Pismo Beach pipeline & GeoJSON \\ \hline
+\multirow{2}{*}{XYZ Operations}
+ & Rainfall & SLO County & GeoJSON \\ \cline{2-4}
+ & Ground movement & Paso Robles pipeline & Shapefiles \\ \hline
+\end{tabular}
+\end{table}
 
-\begin{itemize}
- \item ABC Pipeline Co.
- \begin{itemize}
-     \item Vehicle traffic
-     \begin{itemize}
-         \item Spans SLO county
-         \item Generated as Shapefiles
-     \end{itemize}
-     \item Construction equipment
-     \begin{itemize}
-         \item Spans SLO county
-         \item Generated as GeoJSON
-     \end{itemize}
- \end{itemize}
- 
- \item XYZ Operations
- \begin{itemize}
-     \item Rainfall
-     \begin{itemize}
-         \item Spans SLO county
-         \item Generated as GeoJSON
-     \end{itemize}
-     \item Ground movement
-     \begin{itemize}
-         \item Local to Paso Robles pipeline
-         \item Generated as Shapefiles
-     \end{itemize}
- \end{itemize}
-\end{itemize}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.84\textwidth]{figures/county.png}
+    \caption{San Luis Obispo County lines. Note Paso Robles in the north. Pismo Beach (unlabeled) is between Avila Beach and Arroyo Grande}
+    \label{fig:permissions}
+\end{figure}
 
-XYZ chooses to release their rainfall data publicly (to anyone who's willing to retrieve it from our system). The rest of the data, from both organizations, uses RAPID's permissioning system to allow shared access when required by business policies.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.87\textwidth]{figures/pismo.png}
+    \caption{Pismo Beach city limits and pipeline region.}
+    \label{fig:permissions}
+\end{figure}
 
-Because ABC Pipeline Co. and XYZ Operations cooperate for the Pismo Beach pipeline region, ABC (the owner of vehicle traffic and construction equipment data for the county) shares resources with XYZ so that they can also perform analysis. And although ABC and XYZ want to look at the same data for the same pipeline region, the groups use different DSS: ABC's only reads GeoJSON, and XYZ's only reads Shapefiles.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.55\textwidth]{figures/paso.png}
+    \caption{Paso Robles city limits and pipeline region.}
+    \label{fig:permissions}
+\end{figure}
 
-With the above considerations, the 
+XYZ chooses to release their rainfall data publicly (to anyone who's willing to retrieve it from RAPID). The rest of the data, from both organizations, uses our permissioning system to allow shared access when required by business policies.
+
+Because ABC Pipeline Co. and XYZ Operations cooperate in the Pismo Beach pipeline region, ABC (the owner of vehicle traffic and construction equipment data for the county) shares resources with XYZ.
+
+To slightly increase the complexity and realism of this example, we specify that the input formats begin as both GeoJSON and Shapefiles, and although ABC and XYZ review the same data for the same pipeline region, the groups use different DSS: ABC's only reads GeoJSON, and XYZ's only reads Shapefiles.
 
 At a high level, with the above considerations, this scenario entails
 \begin{enumerate*}[label=\itshape\alph*\upshape)]
 \item setting up API tokens,
 \item creating DataLayers,
-\item updating DataLayers with GeoJSON and Shapefiles,
+\item importing GeoJSON and Shapefiles into DataLayers,
 \item modifying permissions,
 \item creating and querying GeoViews, and
-\item exporting data in GeoJSON or Shapefiles
+\item exporting data in GeoJSON and Shapefiles
 \end{enumerate*}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\textwidth]{figures/permissions.png}
+    \caption{Example permissions setup between two organizations.}
+    \label{fig:permissions}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.99\textwidth]{figures/er.png}
+    \caption{Entity-relationship diagram for RAPID's main conceptual data model.}
+    \label{fig:permissions}
+\end{figure}
 
 \section{Geospatial data modeling and organization}
 Taken together, a subset of RAPID classes enables structured data storage and retrieval for geographic features. In other words, these components could stand on their own, letting users browse and analyze geospatial objects (and groups of geospatial objects), which fulfills our central database requirements. For the moment, we hold off discussing secondary functionality like permissioning and GeoViews.
 
 \subsection{Feature}
-We first describe the core makeup for \textit{features} in RAPID---that is, real geographic entities combined with other noteworthy indicators---and how they're presented to third parties. We saw in Chapter~\ref{background} that Geometry is the most generic and encompassing geospatial data type,\footnote{Remember that the Abstract Specification models these types hierarchically: a Polygon is a Polygon with holes, and a Polygon with holes is a Geometry, and so forth.} and we also discussed that geospatial features correlate those mathematically-defined geometries with other descriptive attributes.
+We first describe the core makeup for \textit{features} in RAPID---that is, real geographic entities combined with other noteworthy indicators---and how they're presented to third parties. We saw in Chapter~\ref{background} that Geometry is the most generic and encompassing geospatial data type.\footnote{Remember that the Abstract Specification models these types hierarchically: a Polygon is a Polygon with holes, and a Polygon with holes is a Geometry, and so forth.} We also discussed that geospatial features correlate those mathematically-defined geometries with other descriptive attributes.
 
-A RAPID Feature object is mostly a recreation of the geospatial features described in the Abstract Specification. There are some minor system-specific additions, but the purposes are similar enough that we borrow the terminology and general model.
+A RAPID Feature object is mostly a recreation of the geospatial features described in the Abstract Specification. There are some minor system-specific additions, but the purposes are similar enough that we borrow the terminology.
+
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
+class Feature(models.Model):
+    uid = models.TextField(unique=True, db_index=True)
+    geom = models.GeometryField(null=True)
+    bbox = models.PolygonField(null=True)
+    properties = models.TextField(null=True)
+    create_timestamp = models.TimeField(auto_now_add=True,
+      null=True, db_index=True)
+    layer = models.ForeignKey(DataLayer, null=True)
+    archive = models.ForeignKey(Archive, null=True)
+    hash = models.TextField(null=True, unique=True, db_index=True)
+    
+class DataLayer(models.Model):
+    uid = models.TextField(unique=True, db_index=True)
+    descriptor = models.TextField()
+    properties = models.TextField(null=True)
+    is_public = models.BooleanField(default=False)
+    
+class GeoView(models.Model):
+    uid = models.TextField(unique=True, db_index=True)
+    descriptor = models.TextField()
+    geom = models.GeometryField(null=True)
+    bbox = models.PolygonField(null=True)
+    properties = models.TextField(null=True)
+    layers = models.ManyToManyField('DataLayer', null=True)
+\end{Verbatim}
 
 The Feature model comprises the following:
 
@@ -120,15 +170,19 @@ The Feature model comprises the following:
   \item[Geometry] \hfill \\
   A Geometry object represents the real-world footprint of the Feature (whether it's a Polygon, Line, Point, etc.). Functions from the OGC Standard can also be used to highlight various spatial characteristics like length, area, or circumference---calculations and descriptions people use everyday. Comparing two or more geometries (with the earlier-discussed boolean relational operators) can reveal useful patterns, too.
    
-   For simplicity, RAPID does not support elevations in a geometry. When importing Features, we only store the first two dimensions. This is usually fine for our pipeline operating partners: most relevant datasets are two-dimensional---the features are located on the Earth's surface (or at least within tens of feet). This missing third dimension is not related to the querying process (we never planned to allow Feature filtering based on height); it only matters in data visualization or other analyses. As an easy workaround on the user's end, the elevation could be ported rather easily to the Feature's properties, instead of residing in the Geometry.
+   For simplicity, RAPID does not support elevations in a geometry. When importing Features, we only store the first two dimensions. This is usually fine for our pipeline operating partners: most relevant datasets are two-dimensional---the features are located on the Earth's surface (or at least within tens of feet).
+   
+   This missing third dimension is not related to the querying process (we never planned to allow Feature filtering based on height); it would only matter in data visualization or other analyses. As an easy workaround on the user's end, the elevation could be ported rather easily to the Feature's properties, instead of residing in the Geometry.
   
   \item[Properties] \hfill \\
-  Structured key-value stores are the norm for handling arbitrary GIS data, so an unlimited-length properties string bundles other relevant fields in a Feature. When shaping RAPID's usage style and conventions, we specifically wanted to support JSON as an intuitive data interchange format because our implementation already leans on GeoJSON and the REST API parses JSON requests anyway.
+  Structured key-value stores are the norm for handling arbitrary GIS data, so an unlimited-length properties string bundles other relevant fields in a Feature. When shaping RAPID's usage style and conventions, we specifically wanted to support JSON as an intuitive data interchange format because our implementation leans on GeoJSON and the REST API already parses JSON requests.
   
-  Properties introduce the ability to store and retrieve virtually any data for the Earth's surface (assuming it's serializable to JSON). The users that need extra functionality client-side can then perform more advanced filtering and analysis with information other besides just shape and location.
+  The properties field introduces the ability to store and retrieve virtually any data for the Earth's surface (assuming it's serializable to JSON). Users that need extra functionality client-side can perform more advanced filtering and analysis with information other besides just shape and location.
   
   \item[Unique identifier (UID)] \hfill \\
-  We use a public, user-facing unique identifier (UID) for direct Feature look-ups. While these could be any kind of unique value type, RAPID automatically generates textual UIDs upon Feature creation that are URL-safe and user-friendly (in that they're relatively short and use everyday numbers and letters).\footnote{We add UIDs to the three most prominent queryable models in RAPID---Feature, DataLayer, and GeoView---expecting that these are the objects that under study and discussion. In that respect, portability's very helpful.}\footnote{We landed on this particular UID terminology for RAPID. An ``ID'' already gets used internally for back-end database work, and ``GUID'' (globally-unique identifier) is an existing standard for generating object identifiers. Our UID makes use of the GUID standard behind the scenes, but they're not one and the same.} It's worth noting that our UIDs are generated randomly (with a secure random number generator) and end up being 22 bytes. An integer identifier would be reasonable too (especially with some slight indexing efficiencies over a longer string), but random strings won out:
+  We use a public, user-facing unique identifier (UID) for direct Feature look-ups. While these could be any kind of unique value type, RAPID automatically generates textual UIDs upon Feature creation that are URL-safe and user-friendly (in that they're relatively short, using everyday numbers and letters).\footnote{We add UIDs to the three most prominent queryable models in RAPID---Feature, DataLayer, and GeoView---expecting that these are the objects under study and discussion. In that respect, the portability's very helpful.}\footnote{We coined this particular UID terminology for RAPID. An ``ID'' already gets used internally for back-end database work, and ``UUID'' (universally-unique identifier) is an existing standard for generating object identifiers~\cite{Leach}. Our UID makes use of the UUID standard behind the scenes, but they're not one and the same.}
+  
+It's worth noting that our UIDs are generated randomly (with a secure random number generator) and end up being 22 bytes. An integer identifier would be reasonable too (especially with some slight indexing efficiencies over a longer string), but random strings won out:
   
   \begin{itemize}
   \item Features are the most numerous object type in RAPID. While we wouldn't expect to easily max out a 32- or 64-bit number, 22 bytes erases any worry of integer overflow when deployed over a wide area and many years.\footnote{The same argument could be made with fewer bytes: the library we're using happens to use 22.}
@@ -139,34 +193,37 @@ The Feature model comprises the following:
 \item[Bounding box] \hfill \\
   It's somewhat common for GIS features to include a bounding box attribute---defining the minimally-bounding rectangle for the geometry. The small number of coordinates in a bounding box can estimate and rule out results in spatial functions more quickly than the ``true'' geometry.
 
-  RAPID does not currently make use of bounding box checks (although they could be useful in the future, pending performance tests). However, bounding boxes are a standardized attribute for Abstract Specification features (separate from the other key-value properties), so we store them anyway.
+  RAPID does not currently use bounding box checks (but they could be useful in the future, pending performance tests). However, bounding boxes are a standardized in Simple Features Access, so we store them anyway~\cite{SFA}.
+  
+\item[Timestamp] \hfill \\
+Time
   
 \end{description}
 
 \section{Data collections}
-Chapter~\ref{requirements} already provided some examples and reasoning for logically grouping Features. Here we discuss our method of doing so, using DataLayers and GeoViews.
+Chapter~\ref{requirements} already provided examples and reasoning for logically grouping Features. Here, we discuss our methods of doing so, using DataLayers and GeoViews.
 
 \subsection{DataLayer}
-DataLayers exist to usefully store multiple similarly-structured Features from one source. Although there is a notion of layers in the Abstract Specification, RAPID diverges from any of their detailed considerations and only keeps the spirit of categorization---hence the rename.
+DataLayers exist to usefully store multiple similarly-structured Features. Although there's a notion of layering in OGC standards, RAPID diverges from any of their detailed considerations and only keeps the spirit of categorization---hence the rename~\cite{AbstractSpecFaq,SFA,WFS}.
 
-While RAPID doesn't enforce a consistent structure on properties, we'd expect them to be similar within a DataLayer so that they can be analyzed consistently. Although a misnomer, a DataLayer's Features can be imagined as \textit{instances} of the layer descriptor, because of their similar schemas.
+While RAPID doesn't enforce a consistent structure on properties, we'd expect them to be similar within a DataLayer so that they can be analyzed consistently. Although a misnomer, a DataLayer's Features can be imagined as \textit{instances} of the layer descriptor, if they have similar schemas.
 
 DataLayers start out with these fields:
 
 \begin{description}
 
 \item[UID] \hfill \\
-DataLayers use the same UIDs as Features. While the larger string size isn't as necessary for the number of DataLayers as it was with Features---they'll never be the same order of magnitude---we keep the same setup for consistency. We could partially truncate the UID for DataLayers (and other less-numerous types) if we had to be extra concerned about it.
+DataLayers use the same UIDs as Features. While the larger string size isn't as necessary for the number of DataLayers as it is with Features---they'll never be the same order of magnitude---we keep the same setup for consistency. We could partially truncate the UID for DataLayers (and GeoViews) if we had to be extra concerned about it.
 
 \item[Descriptor] \hfill \\
 As a simple user-friendly and -facing title for DataLayers, we include a short Descriptor text field. The Descriptor labels the set of contained Features; ``Earthquake'' and ``Construction equipment'' are reasonable examples.
 
 \item[Properties] \hfill \\
-To mirror the properties capabilities in Features, we store JSON metadata in DataLayers (and we leave it up to third parties to define the fields). Use of the metadata is optional, but it sometimes includes important documentation for Features' properties.
+To mirror the properties capabilities in Features, we store JSON metadata in DataLayers (and leave it up to third parties to define the fields). Use of the metadata is optional, but it sometimes includes important documentation for Features' properties.
   
 \end{description}
 
- We haven't carried out performance testing to determine the real-world tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers, even though there \textit{could} be some significant efficiency improvements to explore: one check with a DataLayer bounding box can avoid costly comparisons against thousands (or millions!) of Features. It'd be somewhat more complex, however, to keep the bounding dimensions up to date: as soon as Features change within a DataLayer, the bounding box has to be recalculated.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code, but it's outside our current scope of work.}
+ We haven't carried out performance testing to determine the tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers, even though there \textit{could} be significant efficiency improvements to explore: one check with a DataLayer bounding box could avoid costly comparisons against thousands (or millions!) of Features. It'd be somewhat more complex, however, to keep the bounding dimensions up to date: as soon as Features change within a DataLayer, the bounding box must be recalculated.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code, but it's outside our scope of work.}
 
 \subsection{Feature}
 To accommodate DataLayers, we needed to add an extra field to Features to specify the DataLayer they belong to:
@@ -187,44 +244,41 @@ To elaborate, a GeoView includes
 \begin{enumerate*}[label=\itshape\alph*\upshape)]
 \item one or more DataLayers and
 \item a region of interest's Geometry
-\end{enumerate*}. RAPID saves which DataLayers are added to the view; when the GeoView is queried, Features from those DataLayers are returned to the requestor if they're within the chosen Geometry. GeoViews are rather analogous to ordinary SQL views (informing the name) and could even be implemented as them (aside from metadata), if so chosen.
+\end{enumerate*}. RAPID saves which DataLayers are added to the view; when the GeoView is queried, Features from those DataLayers are returned to the requestor if they encroach on the chosen Geometry. GeoViews are rather analogous to ordinary SQL views (bringing about the name). They could even be implemented as them (aside from metadata), if so chosen.
+
 
 To accommodate this functionality in the API, we define the GeoView model with these attributes:
 
 \begin{description}
 
 \item[DataLayer collection] \hfill \\
-Each GeoView has a collection of the DataLayers to retrieve Features from. Users can add DataLayers to GeoViews (and remove them), so at run-time, their chosen DataLayers are searched. To indicate a specific physical location to query within or around, GeoViews include an assignable Geometry field.
+Each GeoView has a collection of the DataLayers to retrieve Features from. Users can add DataLayers to GeoViews (and remove them), so at run-time, their chosen DataLayers are searched.
 
 \item[Geometry] \hfill \\
-Early in requirements gathering, it was a forgone conclusion that GeoView Geometries should narrow DataLayers to their specified region. This implied using the \texttt{Intersects} boolean relational operator so that all Features within or encroaching on a region are available. On the other hand, as RAPID's implementation progressed and API calls were tested, we noticed the value in supporting several of the Abstract Specification's spatial operators.
+To indicate a specific physical location to query within or around, GeoViews include an assignable Geometry field. Early in requirements gathering, it was a forgone conclusion that GeoView Geometries narrow DataLayers to their specified region. This implied using the \texttt{Intersects} boolean relational operator so that all Features within or encroaching on a region are available. On the other hand, as RAPID's implementation progressed and API calls were tested, we noticed the value in supporting several of the Abstract Specification's spatial operators.
 
-As such, \texttt{Intersects} is left as the default, but we also let callers to this interface choose \texttt{Contains} or \texttt{DWithin}. \texttt{Contains} produces of subset of the results of \texttt{Intersects}; the difference is that ``contained'' Features are \textit{fully} contained within the Geometry and cannot merely be overlapping the border. The \texttt{DWithin} operator produces a superset of Features from the \texttt{Intersects} results: Features within a certain distance of the Geometry are also selected. This can highlight nearby Features that are still relevant (or that could be relevant in the future).
+As such, \texttt{Intersects} is left as the default, but we also let callers to this interface choose \texttt{Contains} or \texttt{DWithin}. \texttt{Contains} produces of subset of the results of \texttt{Intersects}; the difference is that ``contained'' Features are \textit{fully} contained within the Geometry and cannot merely be overlapping the border. The \texttt{DWithin} operator produces a superset of Features from the \texttt{Intersects} results; the difference is Features within a certain distance of the Geometry are also selected. This would highlight nearby Features that are still relevant (or that could be relevant in the future).
 
 \item[Bounding box] \hfill \\
-Again, pending performance tests, GeoView bounding boxes could prove to better our speeds, but they aren't currently set or used in our queries.
+Again, pending performance tests, GeoView bounding boxes could prove to better our speeds, but they aren't currently set or used in our queries. We don't have the same concerns with bounding box consistency as we do with DataLayers, however, because there's only one geometry associated with the object.
 
 \item[UID] \hfill \\
 This identifier for GeoView rounds out our use of UIDs, included for the same reasons discussed in Features and DataLayers.
 
 \item[Descriptor] \hfill \\
-It makes sense for GeoView instances to have a user-friendly name to encompass their purpose. The example from Chapter~\ref{} was ``SLO human factors'' with an automobile traffic DataLayer and a construction equipment DataLayer cropped to San Luis Obispo's county lines.
+It makes sense for GeoView instances to have a user-friendly name to encompass their purpose---possibly shuffled among other GeoViews. An example we've seen would include ``Pismo Beach Pipeline.''
 
 \item[Properties] \hfill \\
-Included for the same reason in DataLayers, a properties field stores any desired metadata. In the case of GeoViews, users may want to provide detailed explanations on why the DataLayers are relevant or what different data indicates.
+Included for the same reason in DataLayers, a properties field stores any desired metadata. In the case of GeoViews, users may want to provide detailed explanations on why the DataLayers are relevant or what different values indicate.
 
 \end{description}
 
 
 \section{Importing and exporting data}
-We can now describe how data is added to RAPID---how Features are ``imported'' from geospatial file formats---which might occur on-demand from API requests or automatically after some set-up. We also take the opportunity to describe the export and file writing process.\footnote{Note that this only goes as far as to say how Features become and are converted from geospatial formats. The REST API itself includes other metadata and formatting in its requests and responses; the serialized geospatial file may be embedded in a larger JSON object~\cite{}.}
-
-As we discussed in Chapter~\ref{design}, RAPID must read from and write to a variety of geospatial file formats (GeoJSON and Shapefiles at first). Here, we note how a user specifies a file and file type, and the generic process RAPID uses to parse and save their Features.
-
-Although our requirements do specify GeoJSON and Shapefile support, we know other parsing capabilities may be required soon. As such, we've structured the objects and interfaces so that additional file formats will be easily importable in the future.\footnote{In general, we've looked to future-proof these high-level interfaces so that they're more dependent on the Abstract Specification than any one format or library.}
+We can now describe how data is added to RAPID---how Features are ``imported'' from geospatial file formats---which might occur on-demand from API requests. We also take the opportunity to describe the export and file writing process.\footnote{Note that this only goes as far as to say how Features become and are converted from geospatial formats. The REST API itself includes other metadata and formatting in its requests and responses; the serialized geospatial file may be embedded in a larger JSON object~\cite{Francis}.} As we discussed in Chapter~\ref{design}, RAPID must read from and write to a variety of geospatial file formats (GeoJSON and Shapefiles at first). Here, we note how a user specifies a file and file type, and the generic process RAPID uses to parse and save Features. Although our requirements do specify GeoJSON and Shapefile support, we know other parsing capabilities may be required soon. As such, we've structured the objects and interfaces so that additional file formats will be easily importable at another time.\footnote{In general, we've looked to future-proof these high-level interfaces so that they're more dependent on the Abstract Specification than any one format or library.}
 
 \subsection{Importing files}
-The multiplicity of spatial and geographic file specifications is mirrored by the huge number of options in parsing, writing, validating, and transforming them. Some tools are easier to use than others; some support files that others don't. Some spatial DBMS will even handle encoding and decoding of popular formats natively. Therefore, we prioritize flexibility in the architecture for importing files and leave the implementation to fill in any blanks between the database and files.\footnote{We won't dive into any intricacies of file formats or parsers here. A few of our considerations for Shapefile support are discussed in Chapter 5. Otherwise, official documentation and other tutorials provide the most accurate and proper guidelines for parsing and validation. See~\cite{}.}
+The multiplicity of spatial and geographic file specifications is mirrored by the number of options in parsing, writing, validating, and transforming them. Some tools are easier to use than others; some support files that others don't. Some spatial DBMS will even handle encoding and decoding of popular formats natively. Therefore, we prioritize flexibility in the architecture for importing files and leave the implementation to fill in any blanks between the database and files.\footnote{We won't dive into any intricacies of file formats or parsers here. A few of our considerations for Shapefile support are discussed in Chapter 5. Otherwise, official documentation and other tutorials provide the most accurate and proper guidelines for parsing and validation. See~\cite{}.}
 
 RAPID accomplishes this through several abstract steps with a file parser:
 
@@ -272,7 +326,7 @@ Finish this section...
 
 
 \section{Permission management}
-Chapter~\ref{requirements} laid out the expectations for permissioning capabilities on RAPID DataLayers\footnote{In practical terms, Features inherit permissions from their DataLayer.} and GeoViews. That functionality is enabled by adding several components and changing our design in these ways:
+Chapter~\ref{requirements} laid out permissioning capabilities for RAPID DataLayers and GeoViews. In practical terms, Features inherit permissions from their DataLayer. That functionality is enabled by adding several components and changing our design in these ways:
 
 \subsection{Role enum}
 We add an enum, Role, to define the three available permission roles for RAPID data:
@@ -288,18 +342,34 @@ Again recall that, on a daily basis, in-operation software is RAPID's end user: 
 \subsection{ApiToken}
 The simple ApiToken model associates a friendly name (used as an identifier for administrative purposes) with a cryptographically-secure, randomly-generated key that grants resource access. When API requests come \textit{with} a token, RAPID knows who or what is requesting data and can return an appropriate set of results.
 
+
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
+class ApiToken(models.Model):
+    key = models.TextField(unique=True, db_index=True)
+    descriptor = models.TextField(unique=True)
+    issued = models.TimeField(null=True, auto_now_add=True)
+\end{Verbatim}
+
 \begin{description}
 \item[Name] \hfill \\
-We require a friendly public name to identify this token. This can be used when choosing and assigning permissions for RAPID's other named tokens.
+We require a friendly public name to identify this token. This can be used when choosing and assigning permissions for RAPID's other managed tokens.
 
 \item[Key] \hfill \\
-Upon creating an ApiToken and giving it a name, the system creates a long, random, URL-safe hash value to use as a password for sharing and accessing privileged data. When performing access-dependent API activities, the caller uses the (unguessable) token to show that they have the correct permissions, and RAPID checks that key against its internal records (the DataLayerRole and GeoViewRoles below).
+Upon creating an ApiToken and giving it a name, the system creates a long, random, URL-safe hash value to use as a password for sharing and accessing privileged data. When performing access-dependent API activities, the caller uses the (unguessable) token to show that they have the correct permissions, and RAPID checks the key against its internal records (the DataLayerRole and GeoViewRoles below).
 
 \item[Timestamp] \hfill \\
 Although our work is not focused on the security aspects of RAPID, we define and assign a creation timestamp for each token so that expiration or renewal policies can be implemented by future contributors.
 
 \end{description}
 To track newly-assigned permissions on DataLayers and GeoViews, we create DataLayerRole and GeoViewRole models, associating an ApiToken with a DataLayer or GeoView and specifying the particular role.
+
+
+\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
+class GeoViewRole(models.Model):
+    token = models.ForeignKey(ApiToken)
+    role = enum.EnumField(Role)
+    geo_view = models.ForeignKey(GeoView)
+\end{Verbatim}
 
 \subsection{DataLayerRole and GeoViewRole}
 \begin{description}
@@ -318,7 +388,7 @@ The Role enum specifies the level of access this setup grants for the token on t
 \subsection{DataLayer}
 \begin{description}
 \item[Public flag] \hfill \\
-When creating a DataLayer, we ask users to specify if it's a \textit{public} DataLayer, which anyone is allowed to view. For DataLayers that should be widely-accessible, this removes the inconvenience of adding a lot of viewers manually. The original creator retains ownership and can continue to add other owners and editors as necessary.
+When creating a DataLayer, we ask users to specify if it's a \textit{public} DataLayer, which anyone is allowed to view. For DataLayers that should be widely-accessible, this removes the inconvenience of adding a lot of Viewers manually. The original creator retains ownership and can continue to add other Owners and Editors as necessary.
 \end{description}
 
 
