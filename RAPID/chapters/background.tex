@@ -31,7 +31,7 @@ GIS functionality can usually be placed in one of five categories~\cite{Esriintr
 
 \begin{description}
   \item[Mapping object locations.] Descriptors can be assigned to points in space (take addresses, for example). In a technical sense, this is usually seen as associating string-like data---ideas or concepts (like place names)---with floating-point latitude and longitude. These are commonly called \textit{features} (central to any geospatial system)~\cite{Kottman2009}.
-  \item[Mapping quantities.] Quantities can be mapped to certain points to relate locations with numeric data about them. This could be integers and floating point values, again, assigned to latitude and longitude. These are also considered features.
+  \item[Mapping quantities.] Quantities can be mapped to certain points to relate locations with numeric data about them. This could be integers and floating point values, again, assigned to latitude and longitude. These are also considered \textit{features}.
   \item[Mapping densities.] Not only can values be assigned to specific points on a map, densities can be generated and displayed, which show the distribution of objects or values over an area.
   \item[Determining relative positions of objects.] GIS can determine if spatial entities are located within or near each other. Additionally, they measure distances between objects and locations and determine whether or not they intersect.
   \item[Analyzing trends.] Many GIS look at trends in data. There's a lot of demand and opportunity for analysis in how locations and features change over time.
@@ -64,7 +64,7 @@ In common with other GIS defaults, we specify RAPID to use SRID 4326, the standa
 Vector files contain mathematical and geometric representations of spatial data, defining points and shapes in space. They are split into two components: geometries and attributes (or ``properties'').
 
 \subsubsection{Geometries.}
-Coordinate pairs are two values that represent a point in space in a coordinate system~\cite{gentle_intro}. Most commonly (and in RAPID), this is WGS 84, where one value is latitude and other is longitude; taken together, any point on Earth's surface can be represented.
+\textit{Coordinate pairs} are two values that represent a point in space in a coordinate system~\cite{gentle_intro}. Most commonly (and in RAPID), this is WGS 84, where one value is latitude and other is longitude; taken together, any point on Earth's surface can be represented.
 
 In vector files, sequences (or ``series'') of these points can represent different geographic concepts, most often called ``geometries.'' There are Points, Lines, Linestrings, and Polygons (shown in Figure~\ref{fig:geoms})~\cite{gentle_intro}:
 
@@ -93,10 +93,10 @@ In vector files, sequences (or ``series'') of these points can represent differe
 \end{figure}
 
 \subsubsection{Attributes}
-Attributes are simply non-spatial data that's associated with the spatial data described above. An address (also mentioned above) is a great example: house numbers, streets, cities, states, and zip codes all associate an identifier with a point in space (or other geometric type)~\cite{gentle_intro}.
+Attributes (often called ``properties'') are simply non-spatial data that's associated with the spatial data described above. An address (also mentioned above) is a great example: house numbers, streets, cities, states, and zip codes all associate an identifier with a point in space (or other geometric type)~\cite{gentle_intro}.
 
 \subsection{Raster}
-Raster data is simply grids of values. It's best to imagine a digital image: pixels in a matrix are each assigned red, green, and blue color values. When they're appropriately combined and visualized, a continuous dataset spreads over a region in two or three dimensions~\cite{gentle_intro}. Images, in fact, are a type of raster data often found in GIS (like satellite images). Atmospheric or ground sensors can also provide data sets that blanket an area~\cite{gentle_intro}.
+Raster data is simply grids of values. It's best to imagine a digital image: pixels in a matrix are each assigned red, green, and blue color values. When they're appropriately combined and visualized, a continuous dataset spreads over a region in two or three dimensions~\cite{gentle_intro}. Images, in fact, are a type of raster data often found in GIS (like satellite images). Atmospheric sensors and elevation maps, for example, can also provide data sets that blanket an area~\cite{gentle_intro}.
 
 Because raster data is continuous over a region, programs and users need to account for the \textit{density} of data---that is, the size of each grid cell, which is referred to as ``resolution''~\cite{gentle_intro}. Resolution is either spatial or spectral:
 
@@ -118,7 +118,7 @@ With these four pieces of information (and some accompanying calculations), a ra
 
 \section{Data storage}
 \label{storage}
-This section overviews several storage considerations for GIS data.
+This section overviews several storage considerations for GIS data that is most relevant to RAPID.
 
 \subsection{Database management systems}
 Because of the unique data considerations described earlier, databases that manage geospatial data need to pay special attention to the methods of doing so. Spatial database management systems (spatial DBMS) provide ways of storing and querying geospatial data~\cite{Boundless}. This includes syntax for adding vector and raster data types~\cite{Boundless}.
@@ -148,10 +148,10 @@ FROM geometries;
 
 These SQL statements demonstrate the creation of four geometries in a geospatial database: a single Point, a Linestring, Polygons, and Polygons with holes. Note that the generic \texttt{geometry} data type, shown in the \texttt{geometries} table above, is also standardized in Simple Features Access, which can store any of the more specific geospatial types~\cite{Boundless,SFA}.
 
-In terms of notation, the space-separated numbers are a coordinate pair. Commas separate the points, creating ordered series. This particular syntax is Well-Known Text (WKT), an OGC Standard for defining Abstract Specification geometries~\cite{ogc}. Those five geometric data types in PostGIS---\texttt{POINT}, \texttt{LINE}, \texttt{LINESTRING}, and \texttt{POLYGON}---correspond to the types described above in Section~\ref{sec:vector}.
+In terms of notation, the space-separated numbers are a coordinate pair. Commas separate the points, creating ordered series. This particular syntax is Well-Known Text (WKT), an OGC Standard for defining Abstract Specification geometries~\cite{ogc}. Those five geometric data types in PostGIS---\texttt{POINT}, \texttt{LINE}, \texttt{LINESTRING}, and \texttt{POLYGON}---correspond to the vector types described above in Section~\ref{sec:vector}.
 
 \subsubsection{Querying}
-Simple Feature Access, introduced above, defines several required methods for comparing and relating Geometries, summarized below~\cite{SFA}. Figures~\ref{fig:touches} through~\ref{fig:within} visualize four of these boolean relational operators, as examples.
+Simple Feature Access, introduced above, defines several required methods for comparing and relating Geometries, summarized below~\cite{SFA}. Figures~\ref{fig:touches} through~\ref{fig:within} visualize four of these relational operators, as examples.
 
 
 
@@ -203,8 +203,8 @@ Simple Feature Access, introduced above, defines several required methods for co
   \item[Overlap.] Determines if the intersection of two Geometries is different from both the source Geometries but of the same dimension. See Figure~\ref{fig:overlap}.
   \item[Touch.] Tests whether Geometries have their boundaries touching (without intersected interiors). See Figure~\ref{fig:touches}.
   \item[Within and Contains.] Test if a Geometry is fully inside of another. See Figure~\ref{fig:within}.
-  \item[Distance.] Calculates the shortest distance between two Geometries.
-  \item[DWithin.] Tests whether Geometries are within a specified distance of each other.
+  \item[Distance.] Calculates the shortest distance between two Geometries. Note that this is the only operator function without a boolean result.
+  \item[DWithin.] Tests whether Geometries are within a specified distance of each other. Note that this is the only boolean relational operator that takes an additional argument (the distance).
 \end{description}
 
 It's easy to see where and why these come in handy. As a simple example, imagine that a mobile device stores its geographic location---a Point---and is trying to determine the city it's currently in. If a DBMS stores borders (Polygons) for cities, a query can be performed that asks if the Point is within cities' borders~\cite{Boundless}.
@@ -244,7 +244,7 @@ Despite its singular name, a ``Shapefile'' is actually a set of several differen
 \end{description}
 
 \subsubsection{GeoJSON}
-GeoJSON is another common vector file format, although it's not standardized by OGC. It stores data in a nicely-readable format---a superset of JSON (JavaScript Object Notation). Take this example of a geospatial feature in GeoJSON:
+GeoJSON is another common vector file format, although it's not standardized by OGC. It stores data in a nicely-readable format that's a subset of JSON (JavaScript Object Notation). Take this example of a geospatial feature in GeoJSON:
 
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 { "type": "Feature",
