@@ -1,70 +1,52 @@
 \chapter{Validation}
+\label{validation}
+In this last chapter, we summarize our validation of RAPID, showing that the system meets Chapter~\ref{requirements}'s critical requirements, correctly uses the concepts and technologies outlined in our Background, and is efficient enough for real use in the future.
 
-In this last chapter, we summarize our validation of RAPID, showing that the system meets Chapter~\ref{requirements}'s requirements, correctly uses the concepts and technologies outlined in our Background, and is efficient enough for real use in the future.
+We made two primary contributions: 1) guidelines for API developers---at this point, Francis---and external partners to validate our data model and overall system design and 2) performance testing results for common operations.
 
-\section{Introduction}
-\label{polyview_details}
+\section{Functionality}
+RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, verify that RAPID's design meets its specification and that our codebase parses, stores, queries, and outputs geospatial data correctly. These are particularly prudent, as RAPID's entire purpose is to enable portability and interchangeability for \textit{external} partners and \textit{future} developers.
 
-RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, (1) verify that RAPID's design meets it specification and (2) validate that our code base parses, converts, calculates, and outputs geospatial data \textit{correctly}.
+Our example setup between ABC Pipeline Co. and XYZ Operations is a relatively complete case study, showing real class instances and relationships. By showing the models and implementation patterns in Chapter~\ref{design} that support that needed functionality, it should be apparent that RAPID completely and successfully meets our system requirements in Chapter~\ref{requirements}.
 
-Whether or not RAPID is completely bug-free, its design and feature set still must be verified against system requirements. This is particularly prudent, as part of its entire purpose is to enable portability and interchangeability for external partners. RAPID can be verified empirically with the following guidelines.
+Even though our model is, hopefully, convincing on its own, we worked with another student developer, Kishan Patel, to integrate a web application with RAPID for further validation. We call this software \textit{RAPID UI}, which visualizes spatial entities and our organization of data (Features in DataLayers, DataLayers grouped into GeoViews).
 
-There is a set of agreed-upon requirements for RAPID. These include the supported data formats, necessary data model considerations, and known querying features.
+Our peer developer, Patel, had to become acquainted with basic geospatial concepts and client-side libraries, but our contributions to RAPID were significant and successful enough that he was able to create a sensible UI using our most important API calls. Second, being able to visualize our data---both geographic geometries and accompanying properties---we can literally see that data makes it through RAPID, from beginning to end, as expected. As an additional nicety, we share and visualize several datasets with RAPID UI that were recently recommended by pipeline operating partners.
 
-With each of the above participant types represented sufficiently, participants consistently agreeing that core functionality is present would be the best indicator for a verified system. Mismatched ratings between groups may indicate a fundamental misunderstanding or misinterpretation in one conceptual area.
+Francis describes our work with Patel in-depth---she also worked with him to design and fully test REST calls---but please see the following, where we outline our expectations and findings for RAPID UI, focusing on the data model's relevance.
 
-\subsection{Strategies}
-\subsection{PolyView integration}
+\begin{itemize}
+\item A primary goal in researching GIS standards and technologies was to ensure RAPID operates as expected when handling (rather finicky) geospatial data. Therefore, we set up several sample DataLayers for RAPID UI
+
+So, of important note, Patel uses
+
+\item Helo
+\end{itemize}
+
+\section{Performance}
+The previous section shows that, given our data model and business logic, RAPID operates properly; we now use this section to highlight our core data model's performance, showing that it's an efficient base for future additions. We point out specific interface actions from earlier that typify DSS work and compare their runtimes.
+
+\subsection{Setup and results}
+\textit{[Finish this section.]}
+% db_index on off.
+
+small, medium, large
+points, polygons
+Specific features
+DataLayer lookup
+GeoView lookup
 
 
-\section{Functionality verification}
-\subsection{Setup}
-\subsection{Results}
 
 
-\section{Performance testing}
-\subsection{Setup}
-\subsection{Results}
-
-% These requirements can be summarized into short statements such as ``GeoJSON files can be added to the system'' or ``Atmospheric data can be retrieved for any region.'' Valid responses rank from 1 to 5---1 being ``Totally disagree'' and 5 being ``Totally agree.''
-
-% A set of requirements (maybe fifteen of the central features) can be turned into the concise statements and presented to one of three  participant types, a creator, a user, or a third-party, along with access to RAPID and its documentation. RAPID's creators (us), should test the system from our perspective to ensure that we believe we've implemented the functionality as originally planned. Users, or customers, will provide good insight into whether they felt \textit{their} needs were met. Another third-party software developer or GIS expert can act as a tie-breaker of sorts, if there's too much uncertainty.
-
-% With each of the above participant types represented sufficiently, participants consistently agreeing that core functionality is present would be the best indicator for a verified system. Mismatched ratings between groups may indicate a fundamental misunderstanding or misinterpretation in one conceptual area.
-
-% With participants tested in the form above, their process for reaching an answer on the 1-5 scale can be evaluated for further information. A reasonable hypothesis is ``RAPID fulfills its requirements.'' Numbers below a certain threshold, along with qualitative measurements, can disprove that hypothesis. Several feasible measurements include the following:
-
-% \begin{itemize}
-% \item The resources consulted when arriving at an answer. What did or didn't participants find that influenced their decision?
-% \item Background knowledge used to make the decision. Was the participant referencing facts that they knew previously? How did they come to know that?
-% \item Influence of opinion. Did the participant ever (even previously) express a particular interest in one feature or another that went well or poorly?
-% \item Technical flaws found. During this testing process, any technical problems should be logged and investigated (see the next section for further discussion of possibilities in this area).
-% \end{itemize}
-
-% All of this criteria can be weighed and considered to determine how closely RAPID meets its specified requirements.
-
-% \section{Unit testing}
-% One of RAPID's main technical contributions is its data- and file-handling abilities, being able to parse, convert between, and output several structured geospatial formats. The formats usually have similar fields (with data that's highly-specific to established geospatial concepts), so it's mostly trivial to check that the same data is represented in multiple file formats.
-
-% RAPID, additionally, does much of this in a repeatable fashion---reading, writing, and abstractly storing several common file and data types with modular code.
-
-% All of these components can be validated with a thorough unit test suite. On the back end, RAPID uses the Django web framework, which utilizes Python's standard library testing module, \texttt{unittest}~\cite{DjangoTesting}. Once each necessary data field is accounted for in each possible input and output format, exhaustive unit tests can ensure that each field in one format can be converted to the corresponding field in every other format.\footnote{A more efficient methodology would be to focus on common fields converted between common formats.}
-
-% Unit testing is also important because it validates the technical aspects of the data model (even though it can be verified conceptually in other ways\footnote{Like ontological modeling.}). Geospatial data in RAPID's scope can be found in one of several forms:
+\subsection{Unit testing discussion}
+% All of these components could be validated with a thorough unit test suite, using these recommendations. On the back end, RAPID uses the Django web framework, which utilizes Python's standard library testing module, \texttt{unittest}~\cite{DjangoTesting}. Once each necessary data field is accounted for in each possible input and output format, exhaustive unit tests can ensure that each field in one format can be converted to the corresponding field in every other format.
 
 % \begin{itemize}
 % \item Writable and parseable digital format like GeoJSON or Shapefile.
 % \item In-memory objects.
-% \item Well-known text (WKT)---OGC's abstract text format for geospatial features.
+% \item WKT or GeoJSON---abstract text formats for geospatial features.
 % \item Abstract data added to and retrieved from PostGIS.
 % \end{itemize}
 
-% Data can move linearly up and down that list, but can not skip from the top to the bottom or vice versa. Each of those steps and transitions can also be viewed as a data integrity checkpoint that deserves a unit test. For instance, a polygon made up of bordering points (0, 0), (0, 10), and (10, 0) still needs to have the same meaning---a triangle with those three points---no matter where it's located. A GeoJSON file, a Python object, the WKT notation, and PostGIS queries and data structures can all be inspected to ensure that the same data is contained in each. If it isn't, the data was misshaped somewhere along the line that can, hopefully, be traced.
-
-% \section{PolyView}
-
-
-
-% NOTES
-% Differences between on-the-fly file conversion and exporting abstract data
-% Using a bounding box
+% Data can move linearly up and down that list; each of those steps and transitions can also be viewed as a data integrity checkpoint that deserves a unit test. For instance, a Polygon made up of bordering points (0, 0), (0, 10), and (10, 0) still needs to have the same meaning---a triangle with those three points---no matter where its format or location. GeoJSON files and Shapefiles, Python objects, WKT or GeoJSON notation, and PostGIS data structures can all be inspected to ensure that the same data is contained in each. If it isn't, the data was misshaped somewhere along the line that can be traced.
