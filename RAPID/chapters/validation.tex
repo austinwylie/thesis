@@ -7,20 +7,21 @@ We made two primary contributions: 1) guidelines for API developers---at this po
 \section{Functionality}
 RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, verify that RAPID's design meets its specification and that our codebase parses, stores, queries, and outputs geospatial data correctly. These are particularly prudent, as RAPID's entire purpose is to enable portability and interchangeability for \textit{external} partners and \textit{future} developers.
 
-Our example setup between ABC Pipeline Co. and XYZ Operations is a relatively complete case study, showing real class instances and relationships. By showing the models and implementation patterns in Chapter~\ref{design} that support that needed functionality, it should be apparent that RAPID completely and successfully meets our system requirements in Chapter~\ref{requirements}.
+Our example setup between ABC Pipeline Co. and XYZ Operations is a relatively complete case study, showing real class instances and relationships. By showing the models and implementation patterns in Chapter~\ref{design} that support that needed functionality, it should be apparent that RAPID completely and successfully meets our system requirements from Chapter~\ref{requirements}.
 
 Even though our model is, hopefully, convincing on its own, we worked with another student developer, Kishan Patel, to integrate a web application with RAPID for further validation. We call this software \textit{RAPID UI}, which visualizes spatial entities and our organization of data (Features in DataLayers, DataLayers grouped into GeoViews).
 
-Our peer developer, Patel, had to become acquainted with basic geospatial concepts and client-side libraries, but our contributions to RAPID were significant and successful enough that he was able to create a sensible UI using our most important API calls. Second, being able to visualize our data---both geographic geometries and accompanying properties---we can literally see that data makes it through RAPID, from beginning to end, as expected. As an additional nicety, we share and visualize several datasets with RAPID UI that were recently recommended by pipeline operating partners.
+Our peer developer, Patel, had to become acquainted with basic geospatial concepts and client-side libraries, but our contributions to RAPID were significant and successful enough that he was able to create a sensible UI using our most important API calls. Second, being able to visualize our data---both geographic geometries and accompanying properties---we literally see that data makes it through RAPID, from beginning to end, as expected. As an additional nicety, we share and visualize several datasets with RAPID UI that were recently recommended by pipeline operating partners.
 
-Francis describes our work with Patel in-depth---she also worked with him to design and fully test REST calls---but please see the following, where we outline our expectations and findings for RAPID UI, focusing on the data model's relevance.
+Francis describes our work with Patel in-depth---she worked with him to design and fully test REST calls---but please see the short following summary, which outlines our expectations and findings for RAPID UI (focusing on the data model's role)~\cite{Francis}.
 
 \begin{itemize}
-\item A primary goal in researching GIS standards and technologies was to ensure RAPID operates as expected when handling (rather finicky) geospatial data. Therefore, we set up several sample DataLayers for RAPID UI
+\item A primary goal in researching GIS standards and technologies was to ensure RAPID operates as expected when handling (rather finicky) geospatial data. Therefore, we set up several sample DataLayers (from GeoJSON and Shapefiles) for RAPID UI to attempt retrieving and visualizing. In particular, we made our goal that he require as little custom logic as possible---relying instead upon pre-built utilities.
 
-So, of important note, Patel uses
+Patel and Francis ensured RAPID UI could properly request data and handle GeoJSON responses through the API (using common HTTP libraries in Python and JavaScript). After RAPID UI fetches standardized geospatial files, using particular GIS libraries \textit{should and does} let the application parse and visualize data in one step.
 
-\item Helo
+\item Showing relationships between GeoViews, DataLayers, and Features.
+
 \end{itemize}
 
 \section{Performance}

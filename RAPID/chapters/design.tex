@@ -152,7 +152,7 @@ To aid the remainder of this discussion, we introduce a small (but reasonable) e
 
 We imagine ABC Pipeline Co. and XYZ Operations both operate within San Luis Obispo (SLO) County, California, overseeing two pipelines: one in Paso Robles and one in Pismo Beach (note the county map in Figure~\ref{fig:county} and the city maps in Figures~\ref{fig:pismo}  and \ref{fig:paso}). The two companies cooperatively monitor and manage the section of pipeline in Pismo Beach, and XYZ Operations exclusively operates the section of pipeline in Paso Robles. For pipeline integrity management, each organization gathers and processes relevant datasets, intending to add them to RAPID (see Table~\ref{table:layers}). To easily monitor the data, ABC and XYZ create GeoViews for the two regions of interest.
 
-\begin{table}[h]
+\begin{table}[ht]
 
 \begin{tabular}{ |l|l|l|l| }
 % \multicolumn{4}{ |c| }{Example datasets} \\
@@ -207,7 +207,7 @@ The data from both organizations uses our permissioning system to allow shared, 
 \end{itemize}
  
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.99\textwidth]{figures/permissions.png}
     \caption{Example permissions setup between two organizations.}
@@ -226,7 +226,7 @@ At a high level, with the above considerations, this scenario entails
 \item exporting data in GeoJSON and Shapefiles
 \end{enumerate*}. Again note these are not always specific tasks for users---Francis describes those---but these end up being the most critical activities for our data model, described in the remainder of this chaper~\cite{Francis}. In other words, all of these can be accomplished by utilizing our models and writing queries with the techniques described in Section~\ref{sec:prog}, and following sections discuss specific class designs and source code that handle geospatial organization and querying. 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \caption{Entity-relationship diagram for RAPID's three primary geospatial classes.}
     \centering
     \includegraphics[width=0.5\textwidth]{figures/3er.png}
