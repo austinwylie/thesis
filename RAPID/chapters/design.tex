@@ -10,10 +10,10 @@ One of our primary goals, here, is to spell out RAPID's data model and data flow
 
 
 \section{Introduction}
-We preface our contribution with a quick, helpful introduction to Django and related API work by Francis. We, additionally, describe our chosen pattern for cross-module method calls and finish by outlining a larger example we'll continue for the rest of the chapter.
+We preface our contribution with a quick, helpful introduction to Django and related API work by Francis. We, additionally, describe our chosen pattern for cross-module method calls and finish by outlining a larger example we will continue for the rest of the chapter.
 
 \subsection{API design and capabilities}
-In concert with Francis, and regarding the requirements from Chapter~\ref{requirements}, we defined several high-level API calls and activities for customer software (some of which are combined or broken into sub-steps):\footnote{The specific API syntax isn't essential to our discussion here. We list external DSS' primary tasks when using RAPID, but Francis provides more precise, developer-focused documentation~\cite{Francis}.}
+In concert with Francis, and regarding the requirements from Chapter~\ref{requirements}, we defined several high-level API calls and activities for customer software (some of which are broken into sub-steps or combined where possible):\footnote{The specific API syntax is not essential to our discussion here. We list external DSS' primary tasks when using RAPID, but Francis provides more precise, developer-focused documentation~\cite{Francis}.}
 
 \begin{enumerate}
   \item Creating DataLayer instances, including metadata.
@@ -28,19 +28,19 @@ Additionally, to manage permissions, each external system is assigned a unique a
 
 \subsection{Django usage with PostGIS}
 \label{sec:prog}
-To execute on RAPID's chosen functionality, Django (using a PostGIS database) quickly became a clear choice for our implementation framework, and we show how ordinary Python classes persist and are queried. These factors mainly influenced our decision:
+To execute on RAPID's chosen functionality, Django (using a PostGIS database\footnote{Although other spatial DBMS exist, PostGIS is open-source and easily connects with Django. MySQL, another free and open-source option really just \textit{stores} geometric data and only supports cursory spatial calculations~\cite{GeoDb}.}) quickly became a clear choice for our implementation framework, and we show how ordinary Python classes persist and are queried. These factors mainly influenced our decision:
 
 \begin{enumerate}
 \item Django's object-relational mapper lets us form database models quickly and use them wherever necessary in our Python codebase. Rather than crafting custom SQL queries, Django easily exposes tables and columns as classes and properties in Python.
 \item Django is, sometimes, partially branded \textit{GeoDjango} and makes available a lot of GIS functionality---particularly in parsing and converting geometries.
 \end{enumerate}
 
-Referring to the technical advantages above, note further details and examples below. After this section, we won't dwell as much on Django implementation details: assume that future model creation and querying works in approximately the same form as these small tutorials.
+Referring to the technical advantages above, note further details and examples below. After this section, we will not dwell as much on Django implementation details: assume that future model creation and querying works in approximately the same form as these small tutorials.
 
 \subsubsection{Django models}
-Django creates and manages tables in our PostGIS database, mirroring them with classes defined in a \texttt{models.py} file. See how Django turns a class into a \texttt{CREATE TABLE} statement in SQL:
+Django creates and manages tables in our PostGIS database, mirroring them with classes defined in a \texttt{models.py} file. See how Django turns a class into a SQL \texttt{CREATE TABLE} statement in Figure~\ref{fig:feature}.
 
-\begin{figure}
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 class Feature(models.Model):
     uid = models.TextField(unique=True, db_index=True)
@@ -66,11 +66,11 @@ Many of the arguments in the fields are common database constraints:
 \item On foreign keys and other relations, the class type argument indicates the class or table that the model references.
 \end{itemize}
 
-Other field options exist for other purposes, which are described fully in Django's modeling documentation~\cite{Models}.  Note that, to ensure all database entries are fully and properly accounted for, Django adds an auto-incrementing \texttt{id} field to each model automatically, which acts as the primary key. The complete resulting GeoDjango SQL is available in Figure~\ref{fig:sql}.
+Other field options exist for other purposes, which are described fully in Django's modeling documentation~\cite{Models}.  Note that, to ensure all database entries are fully and properly accounted for, Django adds an auto-incrementing \texttt{id} field to each model automatically, which acts as the primary key (except where we specify UID primary and foreign keys). The complete resulting GeoDjango SQL is available in Figure~\ref{fig:sql}.
 
 % To expand on some database-specific nuances here: Django autogenerates surrogate primary keys business keys.
 
-\begin{figure}
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 CREATE TABLE "rapid_feature" (
     "id" serial NOT NULL PRIMARY KEY,
@@ -81,16 +81,16 @@ CREATE TABLE "rapid_feature" (
     "create_timestamp" time,
     "layer_id" integer REFERENCES "rapid_datalayer" ("id")
       DEFERRABLE INITIALLY DEFERRED,
-    "hash" text UNIQUE,
+    "hash" text,
     "modified_timestamp" time
 );
 
 CREATE INDEX "rapid_feature_uid_like"
   ON "rapid_feature" ("uid" text_pattern_ops);
 CREATE INDEX "rapid_feature_geom_id"
-  ON "rapid_feature" USING GIST ( "geom" );
+  ON "rapid_feature" USING GIST ("geom");
 CREATE INDEX "rapid_feature_bbox_id"
-  ON "rapid_feature" USING GIST ( "bbox" );
+  ON "rapid_feature" USING GIST ("bbox");
 CREATE INDEX "rapid_feature_create_timestamp"
   ON "rapid_feature" ("create_timestamp");
 CREATE INDEX "rapid_feature_layer_id"
@@ -98,45 +98,58 @@ CREATE INDEX "rapid_feature_layer_id"
 CREATE INDEX "rapid_feature_hash_like"
   ON "rapid_feature" ("hash" text_pattern_ops);
 \end{Verbatim}
-\caption{CREATE TABLE statements generated by Django using the Python \texttt{Feature} class.}
+\caption{\texttt{CREATE TABLE} statements generated by Django using the Python \texttt{Feature} class.}
 \label{fig:sql}
 \end{figure}
 
 Our other classes defined in models.py---our whole data model---count on that same functionality to generate tables.
 
 \subsubsection{Database interaction}
-To create and store a class instance---a table entry---one can write the following (we use a mock Feature example):
+To create and store a class instance---a table entry---one can write the code in Figure~\ref{fig:save} (we use a mock Feature as an example). Creating an in-memory object is equivalent to using any Python constructor (note the optional and named parameters compared to Feature's definition). The \texttt{save()} method, to save the instance to our database, creates and executes a corresponding \texttt{INSERT} SQL statement.
 
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 new_feature = Feature(uid=12345,
   geom=`POINT(0 0)',
   properties=`{ "Description": "Test Feature" }')
+  
 new_feature.save()
 \end{Verbatim}
+\caption{Django syntax for instantiating and saving a Feature.}
+\label{fig:save}
+\end{figure}
 
-Creating an in-memory object is equivalent to using any Python constructor (note the optional and named parameters compared to its definition). The \texttt{save()} method, to save the instance to our database, creates and executes a corresponding \texttt{INSERT} SQL statement.
+Database queries mimick powerful \texttt{WHERE} clauses and joins in SQL. The static \texttt{filter} method on Django models returns a collection of selected objects, subject to the chosen parameters. See Figure~\ref{fig:filter1}.
 
-Database queries mimick powerful \texttt{WHERE} clauses and joins in SQL. The static \texttt{filter} method on Django models returns a collection of selected objects, subject to the chosen parameters:
-
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 features = Feature.filter(uid=12345)
 for feature in features:
     foo(feature)
 \end{Verbatim}
+\caption{Django syntax for instantiating and saving a Feature.}
+\label{fig:filter1}
+\end{figure}
 
-Multiple \texttt{filter} calls can be chained to continue modifying the result set.\footnote{The \texttt{filter} method returns a QuerySet object that, generally, does not access the database until its results are evaluated. This means that, over time, filters can be changed on a result set and entries are queried as efficiently as possible \textit{only when needed}.} The below lookup finds Features with UIDs greater than 10000 (note the \texttt{gt} keyword) and \texttt{properties} strings containing ``Test''.\footnote{All the data operations in Django are much more complex than we can cover here. Refer to the official Django documentation for in-depth developer information.}
+Multiple \texttt{filter} calls can be chained to continue modifying the result set.\footnote{The \texttt{filter} method returns a QuerySet object that, generally, does not access the database until its results are evaluated. This means that, over time, filters can be changed on a result set. Then, entries are queried as efficiently as possible \textit{only when needed}.} The lookup in Figure~\ref{fig:filter2} finds Features with UIDs greater than 10000 (note the \texttt{gt} keyword) and \texttt{properties} strings containing ``Test''.\footnote{All the database operations in Django are much more complex than we can cover here. Refer to the official Django documentation for in-depth developer information~\cite{GeoDb}.}
 
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 features = Feature.filter(uid__gt=10000)
 features = features.filter(properties__contains=`Test')
 for feature in features:
     foo(feature)
 \end{Verbatim}
+\caption{Django syntax for instantiating and saving a Feature.}
+\label{fig:filter2}
+\end{figure}
 
 \subsubsection{Inter-module communication}
-Having described Django's unique mechanisms and advantages, we now show our approach to passing messages between RAPID's persistence layer and the API modules. Francis organizes a \texttt{urls.py} file and a \texttt{views.py} file to parse incoming customer requests and generate suitable responses. Together, these define---precisely---how customers interact with our outside-facing REST API. Those responsibilities largely include extracting and transforming values from JSON (as well as creating sensible outputs).
+Having described Django's unique mechanisms and advantages, we now show our approach to passing messages between RAPID's persistence layer and the API modules. Francis organizes a \texttt{urls.py} file and a \texttt{views.py} file to parse incoming customer requests and generate suitable responses. Together, these define---precisely---how customers interact with our outside-facing REST API. Those responsibilities largely include extracting and transforming values from JSON application requests (as well as creating sensible outputs).
 
-For that code to retrieve and use database entries, Francis and I created an additional file---the intermediary \texttt{select.py}---to largely handle data management, utilizing the technical concepts previously outlined in this subsection. We map high-level API business logic to this file (like adding DataLayers to a GeoView) and also add three sets of functions for us us to easily add, retrieve, and delete customer-facing data: \texttt{create}, \texttt{get}, and \texttt{delete}. We name these \texttt{create\_feature}, \texttt{get\_feature}, \texttt{delete\_feature}, and so on with DataLayers and GeoViews. The \texttt{create} functions take in end users' parameters, performs any additional back-end processing and stores a newly-created object, returning its assigned UID to the caller. The \texttt{get} and \texttt{delete} functions take in a UID and fetch or delete (respectively) any corresponding database entry.
+For that code to retrieve and use database entries, Francis and I created an additional file---the intermediary \texttt{select.py}---to largely handle data management, utilizing the technical concepts previously outlined in this subsection. We map high-level API business logic to this file (like adding DataLayers to a GeoView) and also add four sets of functions for us to easily add, retrieve, update, and delete customer-facing data: \texttt{create}, \texttt{get}, \texttt{update} and \texttt{delete}. We name these \texttt{create\_feature}, \texttt{get\_feature}, \texttt{update\_feature}, \texttt{delete\_feature}, and so on (with DataLayers and GeoViews, too).
+
+The \texttt{create} functions take in end users' parameters, perform any additional back-end processing and store newly-created objects, returning their assigned UID to a caller. The \texttt{update} functions perform the same logic as creating an object, except specified parameters are modified for a chosen UID, not assigned to a new one. The \texttt{get} and \texttt{delete} functions take in a UID and fetch or delete (respectively) any corresponding database entry.
 
 % \subsubsection{Summary}
 % As a result, decoupled
@@ -150,7 +163,7 @@ To aid the remainder of this discussion, we introduce a small (but reasonable) e
 \item create, share, and query GeoViews
 \end{enumerate*}.
 
-We imagine ABC Pipeline Co. and XYZ Operations both operate within San Luis Obispo (SLO) County, California, overseeing two pipelines: one in Paso Robles and one in Pismo Beach (note the county map in Figure~\ref{fig:county} and the city maps in Figures~\ref{fig:pismo}  and \ref{fig:paso}). The two companies cooperatively monitor and manage the section of pipeline in Pismo Beach, and XYZ Operations exclusively operates the section of pipeline in Paso Robles. For pipeline integrity management, each organization gathers and processes relevant datasets, intending to add them to RAPID (see Table~\ref{table:layers}). To easily monitor the data, ABC and XYZ create GeoViews for the two regions of interest.
+We imagine ABC Pipeline Co. and XYZ Operations both operate within San Luis Obispo (SLO) County, California, overseeing two pipelines: one in Paso Robles and one in Pismo Beach (note the county map in Figure~\ref{fig:county} and the city maps in Figures~\ref{fig:pismo} and \ref{fig:paso}). The two companies cooperatively monitor and manage the section of pipeline in Pismo Beach, and XYZ Operations exclusively operates the section of pipeline in Paso Robles. For pipeline integrity management, each organization gathers and processes relevant datasets, intending to add them to RAPID (see Table~\ref{table:layers}). To easily monitor the data, ABC and XYZ create GeoViews for the two regions of interest.
 
 \begin{table}[ht]
 
@@ -170,21 +183,21 @@ Organization & Data & Covered region & Format\\
 \label{table:layers}
 \end{table}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.84\textwidth]{figures/county.png}
     \caption{San Luis Obispo County lines. Note Paso Robles in the north. Pismo Beach (unlabeled) is between Avila Beach and Arroyo Grande}
     \label{fig:county}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.87\textwidth]{figures/pismo.png}
     \caption{Pismo Beach city limits and pipeline region.}
     \label{fig:pismo}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.55\textwidth]{figures/paso.png}
     \caption{Paso Robles city limits and pipeline region.}
@@ -198,7 +211,7 @@ The data from both organizations uses our permissioning system to allow shared, 
 \end{enumerate*}.
 
 \begin{itemize}
-\item As XYZ operates the Paso Robles pipeline on their own, they don't share the GeoView. The ground movement DataLayer is local and proprietary; they're sole Owner and Viewer. However, XYZ releases their rainfall DataLayer publicly, so that any RAPID user can view it.
+\item As XYZ operates the Paso Robles pipeline on their own, they do not share the GeoView. The ground movement DataLayer is local and proprietary; they are sole Owner and Viewer. However, XYZ releases their rainfall DataLayer publicly, so that any RAPID user can view it.
 \item Because ABC Pipeline Co. and XYZ Operations cooperate in the Pismo Beach pipeline region, ABC shares their relevant resources with XYZ: \begin{enumerate*}[label=\itshape\alph*\upshape)]
 \item the county traffic DataLayer,
 \item the Pismo Beach construction equipment DataLayer, and
@@ -227,21 +240,22 @@ At a high level, with the above considerations, this scenario entails
 \end{enumerate*}. Again note these are not always specific tasks for users---Francis describes those---but these end up being the most critical activities for our data model, described in the remainder of this chaper~\cite{Francis}. In other words, all of these can be accomplished by utilizing our models and writing queries with the techniques described in Section~\ref{sec:prog}, and following sections discuss specific class designs and source code that handle geospatial organization and querying. 
 
 \begin{figure}[ht]
-    \caption{Entity-relationship diagram for RAPID's three primary geospatial classes.}
     \centering
     \includegraphics[width=0.5\textwidth]{figures/3er.png}
+    \caption{Entity-relationship diagram for RAPID's three primary geospatial classes.}
     \label{fig:3er}
 \end{figure}
 
 \section{Geospatial data modeling and organization}
 Taken together, a small subset of RAPID classes enables structured data storage and retrieval for geographic features. In other words, these components could stand on their own, letting users browse and analyze geospatial objects (and groups of geospatial objects)---which fulfills our central database requirements. For the moment, we hold off discussing secondary functionality like permissioning, importing, and exporting data.
 
-Figures~\ref{fig:feature},~\ref{fig:datalayer}, and~\ref{fig:geoview} show the relevant portions of our \texttt{models.py} file for the three models we've discussed throughout this paper. Figure~\ref{fig:3er}, shows a simple entity-relationship diagram to clarify the setup.
+Figures~\ref{fig:feature},~\ref{fig:datalayer}, and~\ref{fig:geoview} show relevant portions of our \texttt{models.py} file for the three models we've discussed throughout this paper. Figure~\ref{fig:3er}, shows a simple entity-relationship diagram to clarify the setup. 
+
+\textit{[Fix ER style.]}
 
 % archive = models.ForeignKey(Archive, null=True)
 
-\begin{figure}
-\caption{DataLayer class in models.py}
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 class DataLayer(models.Model):
     uid = models.TextField(unique=True, db_index=True)
@@ -249,11 +263,11 @@ class DataLayer(models.Model):
     properties = models.TextField(null=True)
     is_public = models.BooleanField(default=False)
 \end{Verbatim}
+\caption{DataLayer class in models.py}
 \label{fig:datalayer}
 \end{figure}
 
-\begin{figure}
-\caption{GeoView class in models.py}
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 class GeoView(models.Model):
     uid = models.TextField(unique=True, db_index=True)
@@ -263,19 +277,18 @@ class GeoView(models.Model):
     properties = models.TextField(null=True)
     layers = models.ManyToManyField('DataLayer', null=True)
 \end{Verbatim}
+\caption{GeoView class in models.py}
 \label{fig:geoview}
 \end{figure}
 
 \paragraph{Features}
 We first describe the core makeup of \textit{features} in RAPID---that is, real geographic entities combined with other noteworthy indicators---and how they're presented to third parties. We saw in Chapter~\ref{background} that Geometry is the most generic and encompassing geospatial data type.\footnote{Remember that the Abstract Specification models these types hierarchically: a Polygon is a Polygon with holes, and a Polygon with holes is a Geometry, and so forth.} We also discussed that geospatial features correlate those mathematically-defined geometries with other descriptive attributes.
 
-A RAPID Feature object is mostly a recreation of the geospatial features described in the Abstract Specification. There are some minor system-specific additions, but the purposes are similar enough that we borrow the terminology.
-
-The Feature model comprises the following (with actual source code in Figure~\ref{fig:feature}):
+A RAPID Feature object is mostly a recreation of the geospatial features described in the Abstract Specification. There are some minor system-specific additions, but the purposes are similar enough that we borrow the terminology. The Feature model comprises the following (with actual source code in Figure~\ref{fig:feature}):
 
 \begin{description}
   \item[Geometry] \hfill \\
-  A Geometry object represents the real-world footprint of the Feature (whether it's a Polygon, Line, Point, etc.). Functions from the OGC Standard can also be used to highlight various spatial characteristics like length, area, or circumference---calculations and descriptions people use everyday. Comparing two or more geometries (with the earlier-discussed relational operators) can reveal useful patterns, too.
+  A Geometry object represents the real-world footprint of the Feature (whether it's a Polygon, Line, Point, etc.). Functions from the Simple Features Access can also be used to highlight various spatial characteristics like length, area, or circumference---calculations and descriptions people use everyday~\cite{SFA}. Comparing two or more geometries (with the earlier-discussed relational operators) can reveal useful patterns, too.
    
    For simplicity, RAPID does not support elevations in a geometry. When importing Features, we only store the first two dimensions. This is usually fine for our pipeline operating partners: most relevant datasets are two-dimensional---the features are located on the Earth's surface (or at least within tens of feet).
    
@@ -298,12 +311,12 @@ It's worth noting that our UIDs are generated randomly (with a secure random num
 \end{itemize}
   
 \item[Bounding box] \hfill \\
-  It's somewhat common for GIS features to include a bounding box attribute---defining the minimally-bounding rectangle for the geometry. The small number of coordinates in a bounding box can estimate and rule out results in spatial functions more quickly than the ``true'' geometry.
+  It's somewhat common for GIS features to include a bounding box attribute---defining the minimally-bounding rectangle for the geometry. Recall our discussion from Chapter~\ref{background}: the small number of coordinates in a bounding box can estimate and rule out results in spatial functions more quickly than the ``true'' geometry.
 
   RAPID does not currently use bounding box checks (but they could be useful in the future, pending performance tests). However, bounding boxes are an important GIS topic in Simple Features Access, so we store them anyway~\cite{SFA}.
   
 \item[Timestamp] \hfill \\
-RAPID stores timestamps with Features---a filterable attribute when querying GeoViews---to indicate their relevance in time.
+RAPID stores timestamps with Features---a filterable attribute when querying GeoViews---to indicate their relevance in time. This makes Features \textit{geospatiotemporal}.
 
 In a technical regard, \texttt{timestamp} is unremarkable, as it's simply another attribute to filter (as a range) when querying Features. However, as discussed in Chapter~\ref{background}, trend-watching is particularly useful and needed in GIS work. This timestamp lets pipeline operators and DSS find data that \begin{enumerate*}[label=\itshape\alph*\upshape)]
 \item is most recent and applicable or
@@ -311,7 +324,7 @@ In a technical regard, \texttt{timestamp} is unremarkable, as it's simply anothe
 \end{enumerate*}.
   
 \item[DataLayer foreign key] \hfill \\
-A foreign key references the Feature's DataLayer---the DataLayers's \texttt{id}. Note that this is a many-to-one relationship (and the primary reason the relationship is directed from Feature to DataLayer). In other words, a Feature always has access to its DataLayer.
+A foreign key references the Feature's DataLayer---the DataLayers's UID. Note that this is a many-to-one relationship (and the primary reason the relationship is directed from Feature to DataLayer). In other words, a Feature always has access to its DataLayer.
 
 \textbf{Implementation note.} This one-way relationship, however, doesn't preclude us from traversing the relationship in the other direction---seeing all the Features for a DataLayer. That alternative action is common enough, and Django makes the querying easy: 
 
@@ -321,14 +334,18 @@ features = layer.feature_set
 
 Even though a \texttt{feature\_set} isn't explicitly defined for a DataLayer, Django adds the property implicitly and handles the reverse lookup of the primary keys behind the scenes.
 
+
+
 \end{description}
+
+\textbf{Example.} \textit{[Incorporate example instances using ABC Pipeline Co. and XYZ Operations.]}
 
 \paragraph{DataLayer}
 DataLayers exist to usefully store multiple similarly-structured Features. Although there's a notion of layering in OGC standards, RAPID diverges from any of their detailed considerations and only keeps the spirit of categorization---hence the rename~\cite{AbstractSpecFaq,SFA,WFS}.
 
 While RAPID doesn't enforce a consistent structure on properties, we'd expect them to be similar within a DataLayer so that they can be analyzed consistently. Although a misnomer, a DataLayer's Features might be imagined as \textit{instances} of the layer descriptor (see below), if they have similar schemas.
 
-DataLayers start out with these fields:
+DataLayers include these fields:
 
 \begin{description}
 
@@ -346,7 +363,9 @@ When creating a DataLayer, we ask users to specify if it's a \textit{public} Dat
   
 \end{description}
 
- We haven't carried out performance testing to determine the tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers, even though there \textit{could} be significant efficiency improvements to explore: one check with a DataLayer bounding box could avoid costly comparisons against thousands (or millions!) of Features. It'd be somewhat more complex, however, to keep the bounding dimensions up to date: as soon as Features change within a DataLayer, the bounding box must be recalculated.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code, but it's outside our scope of work.}
+ We haven't carried out performance testing to determine the tradeoffs, but we specifically chose \textit{not} to include bounding boxes on DataLayers, even though there \textit{could} be significant efficiency improvements to explore: one check with a DataLayer bounding box could avoid costly comparisons against thousands (or millions!) of Features. It'd be somewhat more complex, however, to keep the bounding dimensions up to date: as soon as Features change within a DataLayer, the bounding box must be recalculated.\footnote{The system design could have been set up to incorporate this, and there's an obvious place in the implementation to include the code in \texttt{select.py}, but it's outside our scope of work.}
+ 
+\textbf{Example.} \textit{[Incorporate example instances using ABC Pipeline Co. and XYZ Operations.]}
 
 \paragraph{GeoViews.}
 It's possible (and reasonable) to retrieve all Features for a given DataLayer, but a more common and interesting use case lets users narrow the scope to a more precise and helpful dataset. This is shown explicitly with GeoViews---a way to retrieve data from combined DataLayers for a particular area. We, in fact, mostly expect applications to query GeoViews during daily operation---not DataLayers or Features---because they encompass a more complete study-able concept.
@@ -370,7 +389,7 @@ To indicate a specific physical location to query within or around, GeoViews inc
 As such, \texttt{Intersects} is left as the default, but we also let callers to this interface choose \texttt{Contains} or \texttt{DWithin}. \texttt{Contains} produces of subset of the results of \texttt{Intersects}; the difference is that ``contained'' Features are \textit{fully} contained within the Geometry and cannot merely be overlapping the border. The \texttt{DWithin} operator produces a superset of Features from the \texttt{Intersects} results; the difference is Features within a certain distance of the Geometry are also selected. \texttt{DWithin} could highlight nearby Features that are still relevant (or that may be relevant in the future).
 
 \item[Bounding box] \hfill \\
-Again, pending performance tests, GeoView bounding boxes could prove to better our speeds, but they aren't currently set or used in our queries. We don't have the same concerns with bounding box consistency as we do with DataLayers, however, because there's only one geometry associated with the object.
+Again, pending further performance testing, GeoView bounding boxes could prove to better our speeds, but they aren't currently set or used in our queries. We don't have the same concerns with bounding box consistency as we do with DataLayers, however, because there's only one geometry associated with the object.
 
 \item[UID] \hfill \\
 This identifier for GeoView rounds out our use of UIDs, included for the same reasons discussed in Features and DataLayers.
@@ -383,15 +402,15 @@ Included for the same reason in DataLayers, a properties field stores any desire
 
 \end{description}
 
-\textbf{Implementation note.} Django simply presents many-to-many relationships as collections in each model. Take the following example, where a DataLayer is added to a GeoView:
+\textbf{Implementation note.} Django simply presents many-to-many relationships as collections in each model. Take the following example, where an instantiated DataLayer is added to a GeoView:
 
 \begin{Verbatim}[samepage=true,baselinestretch=1,xleftmargin=12mm]
 geoview.layers.add(layer)
 \end{Verbatim}
 
-Behind the scenes, Django creates and populates a junction table, mapping DataLayers to GeoViews (using their auto-generated primary keys).
+Behind the scenes, Django creates and populates a junction table, mapping DataLayers to GeoViews (using their UID primary keys).
 
-\textbf{Example.} Instances of Features, GeoViews, and DataLayers.
+\textbf{Example.} \textit{[Incorporate example instances using ABC Pipeline Co. and XYZ Operations.]}
 
 \section{Importing and exporting data}
 We can now describe how data is added to RAPID---how Features are ``imported'' from geospatial file formats---which might occur on-demand from API requests or at regular intervals automatically. We also take the opportunity to describe the export process.\footnote{Note that this only goes as far as to say how Features become and are converted from geospatial formats. The REST API itself includes other metadata and formatting in its requests and responses; the serialized geospatial file may be embedded in a larger JSON object~\cite{Francis}.} As we discussed in Chapter~\ref{design}, RAPID must read from and write to a variety of geospatial file formats (GeoJSON and Shapefiles at first). Here, we note how a user specifies a file and file type, and the generic process RAPID uses to parse and save Features. Although our requirements do specify GeoJSON and Shapefile support, we know other parsing capabilities may be required soon. As such, we've structured the objects and interfaces so that additional file formats will be easily importable at another time.\footnote{In general, we've looked to future-proof these high-level interfaces so that they're more dependent on the Abstract Specification than any one format or library.}
@@ -401,21 +420,26 @@ The multiplicity of spatial and geographic file specifications is mirrored by th
  
 In an \texttt{import.py} file, we add high-level file retrieval and parsing functionality, letting the API designate a file type and file location to import. As currently implemented, RAPID can parse GeoJSON and Shapefiles from a URL or on-disk file path. Once the file content is available, it's fed into a parser.\footnote{GeoJSON is an ordinary text-based file format, but as we discussed in Chapter~\ref{background}, Shapefiles are made of up multiple files, so they're transferred and stored as \texttt{.zip} files. Before parsing the extracted files, RAPID unzips this file.}
 
-At a minimum, the parsing utilities and methods must extract geometries and key-value properties from the specified file content. With those available, they can be passed (along with the chosen DataLayer's UID) to our \texttt{create\_feature} function to handle final processing and . The property dictionary is converted to JSON; the geometry must end up in GeoJSON or WKT.\footnote{We don't dive into intricacies of file parsing and validation: official documentation and other tutorials provide the most accurate and proper guidelines. For example, we use GEOS for spatial data structures and operations, and python-geojson and PyShp for reading GeoJSON and Shapefiles~\cite{1,2,3}.}
+At a minimum, the parsing utilities and methods must extract geometries and key-value properties from the specified file content. With those available, they can be passed (along with the chosen DataLayer's UID) to our \texttt{create\_feature} function to handle final processing and storage. The property dictionary is converted to JSON; the geometry must end up in GeoJSON or WKT.\footnote{We don't dive into intricacies of file parsing and validation: official documentation and other tutorials provide the most accurate and proper guidelines. For example, we use GEOS for spatial data structures and operations, and python-geojson and PyShp for reading GeoJSON and Shapefiles~\cite{GEOS,Farwell2014,pyshp}.}
 
-Because multiple files can be added to one DataLayer, duplicate Features could be encountered; however, we need to eliminate redundancies so that these aren't interpreted as discrete entities. To address this, we add a hash value---a digest of the Feature---with the constraint that it is unique per DataLayer. In other words, any new features with precisely the same geometry and properties as an existing feature are disregarded.
+Because multiple files can be added to one DataLayer, duplicate Features could be encountered; however, we need to eliminate redundancies so that these aren't interpreted as discrete entities. To address this, we add a hash value---a digest of the Feature---with the constraint that it is unique per DataLayer. In other words, new Features with the same geometry and properties as an existing Feature are disregarded.
 
+\textbf{Example.} \textit{[Incorporate example instances using ABC Pipeline Co. and XYZ Operations.]}
 
 \subsection{Exporting Features}
-Exporting retrieved Features (maybe from queried GeoViews) works similarly to file importing (except in reverse), but it is primarily in the realm of Francis's API work~\cite{Francis}. To summarize, these are some of the critical steps and considerations:
+\label{sec:export}
+Exporting retrieved Features (maybe from queried GeoViews) works similarly to file importing in reverse, but it is primarily in the realm of Francis's API work~\cite{Francis}. To summarize, these are some of the critical steps and requirements:
 
-\begin{itemize}
-\item Blah 1
-\item Blah 2
-\end{itemize}
+When reading a GeometryField, Django boxes the value into a GEOSGeometry object, exposing helpful functions and properties code-side. Most importantly, these objects have a \texttt{geom\_type} field and a \texttt{coords} list, specifying the Abstract Specification data type and its list of coordinate pairs. Using these components (and the fact that we prescribed SRID 4326), any utility can render serialized Abstract Specification geometries, whether they turn into GeoJSON, Shapefiles, or WKT (or any other format).
 
-\section{Permission management}
-Chapter~\ref{requirements} laid out permissioning capabilities for RAPID DataLayers and GeoViews. That functionality is enabled by adding several components. The entity-relationship diagram in Figure~\ref{fig:er} builds on the diagram in Figure~\ref{fig:3er}, showing the additional classes that make this an operational multi-tenant system.
+The only remaining consideration is how to incorporate Feature properties. When the JSON \texttt{properties} string is pulled from the database, it can be 1) used and transmitted as-is (the case for GeoJSON) or 2) turned into a Python dictionary for use in other serializers (like for Shapefiles).
+
+% synthesize, serialize, render, assemble, build, construct, compose
+
+\section{Multi-tenancy and permission management}
+Chapter~\ref{requirements} laid out permissioning capabilities for RAPID DataLayers and GeoViews. That functionality is enabled by adding several components: the entity-relationship diagram in Figure~\ref{fig:er} builds on the diagram in Figure~\ref{fig:3er}, showing the additional classes that make this an operational multi-tenant system.
+
+\textit{[Fix ER style.]}
 
 \begin{figure}[ht]
     \centering
@@ -438,8 +462,7 @@ Again recall that, on a daily basis, in-operation software is RAPID's end user: 
 \subsubsection{ApiToken}
 The simple ApiToken model associates a friendly name (used as an identifier for administrative purposes) with a cryptographically-secure, randomly-generated key that grants resource access. When API requests come \textit{with} a token, RAPID knows who or what is requesting data and can return an appropriate set of results.
 
-
-\begin{figure}
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 class ApiToken(models.Model):
     key = models.TextField(unique=True, db_index=True)
@@ -447,6 +470,7 @@ class ApiToken(models.Model):
     issued = models.TimeField(null=True, auto_now_add=True)
 \end{Verbatim}
 \label{fig:apitoken}
+\caption{ApiToken class in models.py.}
 \end{figure}
 
 \begin{description}
@@ -460,20 +484,24 @@ Upon creating an ApiToken and giving it a name, the system creates a long, rando
 Although our work is not focused on the security aspects of RAPID, we define and assign a creation timestamp for each token so that expiration or renewal policies can be implemented by future contributors.
 
 \end{description}
-To track newly-assigned permissions on DataLayers and GeoViews, we create DataLayerRole and GeoViewRole models, associating an ApiToken with a DataLayer or GeoView and specifying the particular role.
+To track newly-assigned permissions on DataLayers and GeoViews, we create DataLayerRole and GeoViewRole models---associating an ApiToken with a DataLayer or GeoView and the particular role.
 
-
-\begin{figure}
+\begin{figure}[ht]
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
 class GeoViewRole(models.Model):
     token = models.ForeignKey(ApiToken)
     role = enum.EnumField(Role)
     geo_view = models.ForeignKey(GeoView)
 \end{Verbatim}
+\caption{GeoViewRole class in models.py (analagous to DataLayerRoles for DataLayers).}
 \label{fig:geoviewrole}
 \end{figure}
 
 \subsubsection{DataLayerRole and GeoViewRole}
+
+Both DataLayerRoles and GeoViewRoles contain the same fields (except for referencing DataLayers versus GeoViews). See Figure~\ref{fig:geoviewrole}.
+
+
 \begin{description}
 \item[ApiToken foreign key] \hfill \\
 Specifies the ID of the ApiToken that has resource access.
@@ -487,7 +515,6 @@ The Role enum specifies the level of access this setup grants for the token on t
 
 % Could add user support to tokens down the road
 
-\textit{[Integrate examples with ABC and XYZ's permissioning setup, showing specific roles and API tokens.]}
-
+\textbf{Example.} \textit{[Incorporate example instances using ABC Pipeline Co. and XYZ Operations.]}
 
 \label{design_srid}

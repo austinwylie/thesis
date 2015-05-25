@@ -2,7 +2,7 @@
 \label{validation}
 In this last chapter, we summarize our validation of RAPID, showing that the system meets Chapter~\ref{requirements}'s critical requirements, correctly uses the concepts and technologies outlined in our Background, and is efficient enough for real use in the future.
 
-We made two primary contributions: 1) guidelines for API developers---at this point, Francis---and external partners to validate our data model and overall system design and 2) performance testing results for common operations.
+We made two primary contributions: 1) guidelines and findings for API developers---at this point, Francis---validating our data model and overall system design and 2) performance testing results for common operations.
 
 \section{Functionality}
 RAPID includes a geospatial data model as well as file parsing and querying capabilities. We must, therefore, verify that RAPID's design meets its specification and that our codebase parses, stores, queries, and outputs geospatial data correctly. These are particularly prudent, as RAPID's entire purpose is to enable portability and interchangeability for \textit{external} partners and \textit{future} developers.
@@ -16,36 +16,44 @@ Our peer developer, Patel, had to become acquainted with basic geospatial concep
 Francis describes our work with Patel in-depth---she worked with him to design and fully test REST calls---but please see the short following summary, which outlines our expectations and findings for RAPID UI (focusing on the data model's role)~\cite{Francis}.
 
 \begin{itemize}
-\item A primary goal in researching GIS standards and technologies was to ensure RAPID operates as expected when handling (rather finicky) geospatial data. Therefore, we set up several sample DataLayers (from GeoJSON and Shapefiles) for RAPID UI to attempt retrieving and visualizing. In particular, we made our goal that he require as little custom logic as possible---relying instead upon pre-built utilities.
+\item A primary goal in researching GIS standards and technologies was to ensure RAPID operates as expected when handling (rather finicky) geospatial data. Therefore, we set up several sample DataLayers (from GeoJSON and Shapefiles) for RAPID UI to attempt retrieving and visualizing. In particular, we had the goal of requiring as little custom UI logic as possible---relying instead upon pre-built GIS tools.
 
-Patel and Francis ensured RAPID UI could properly request data and handle GeoJSON responses through the API (using common HTTP libraries in Python and JavaScript). After RAPID UI fetches standardized geospatial files, using particular GIS libraries \textit{should and does} let the application parse and visualize data in one step.
+Patel and Francis ensured RAPID UI could properly request data and handle GeoJSON responses through the API (using common HTTP libraries in Python and JavaScript). After RAPID UI fetches standardized files, using particular geospatial libraries \textit{should and does} let the application parse and visualize our data in one step.
 
-\item Showing relationships between GeoViews, DataLayers, and Features.
+\textit{[Add screenshot.]}
 
+\item Aside from visualizing correctly-shaped and -placed geospatial Features, we had to count on RAPID UI retrieving and displaying relationships between GeoViews, DataLayers, and Features. Patel, using RAPID's JSON responses (designed by Francis), displays available GeoViews in RAPID UI, letting users switch between them and their DataLayers. That is, users can observe and analyze whichever datasets they need at that time.
+
+\item Last, RAPID UI incorporates RAPID's geospatiotemporality by filtering data by time. For example, users can switch between days of a single month to see which Features are generated or applicable on which days.
+
+This characteristic is demonstrably useful: out-of-date Features can be imported alongside recent data that is of much more interest. Operators frequently value hazard and encroachment \textit{prevention}, using the most up-to-date information~\cite{Dunning2013}.
 \end{itemize}
 
 \section{Performance}
-The previous section shows that, given our data model and business logic, RAPID operates properly; we now use this section to highlight our core data model's performance, showing that it's an efficient base for future additions. We point out specific interface actions from earlier that typify DSS work and compare their runtimes.
+The previous section shows that, given our data model and business logic, RAPID operates properly; we now use this section to highlight our core data model's performance, showing that it is an efficient base for future additions. We point out specific interface actions that typify DSS work and compare their runtimes.
 
-\subsection{Setup and results}
+\subsection{Setup}
+\textit{[Finish this section. Use three dataset sizes for Features: small (tens), medium (thousands), large (hundred-thousands). Test both Points and Polygons (significantly different complexities for spatial operators). Also check performance for directly retrieving a GeoView and its DataLayers.]}\footnote{Performance testing spatial schemas and source code could be a thesis to itself. Here, we cast a wide net, but still tackle our most visible and potentially-taxing operations.}
+
+% small, medium, large
+% points, polygons
+% Specific features
+% DataLayer lookup
+% GeoView lookup
+
+\subsection{Results}
 \textit{[Finish this section.]}
-% db_index on off.
 
-small, medium, large
-points, polygons
-Specific features
-DataLayer lookup
-GeoView lookup
+\section{Unit testing discussion}
+The following recommendations could be used to further validate RAPID with a thorough unit test suite.\footnote{On the back end, RAPID could use the Python's built-in testing module, \texttt{unittest}~\cite{DjangoTesting}} Once each required field for geospatial features is located for each possible input and output, exhaustive unit tests can ensure that fields in an input format can be converted to the corresponding fields in any output format. In the event storage or conversion fails, unit tests for the following components would reveal where and why:
 
+\begin{itemize}
+\item Writable and parseable digital format like GeoJSON or Shapefile.
+\item In-memory objects (our own models or GEOSGeometry objects\footnote{We discussed GEOSGeometry briefly in Section~\ref{sec:export}.}).
+\item WKT or GeoJSON---abstract text formats for geospatial features.
+\item Abstract data persisted in PostGIS.
+\end{itemize}
 
-\subsection{Unit testing discussion}
-% All of these components could be validated with a thorough unit test suite, using these recommendations. On the back end, RAPID uses the Django web framework, which utilizes Python's standard library testing module, \texttt{unittest}~\cite{DjangoTesting}. Once each necessary data field is accounted for in each possible input and output format, exhaustive unit tests can ensure that each field in one format can be converted to the corresponding field in every other format.
+Data can move up and down that list; each step and transition (all outlined in Chapter~\ref{design}), should be considered a data integrity checkpoint that deserves a unit test. For instance, a Polygon made up of coordinate pairs (0, 0), (0, 10), and (10, 0) still needs to have the same meaning---a triangle with those three points---no matter its format or original location.
 
-% \begin{itemize}
-% \item Writable and parseable digital format like GeoJSON or Shapefile.
-% \item In-memory objects.
-% \item WKT or GeoJSON---abstract text formats for geospatial features.
-% \item Abstract data added to and retrieved from PostGIS.
-% \end{itemize}
-
-% Data can move linearly up and down that list; each of those steps and transitions can also be viewed as a data integrity checkpoint that deserves a unit test. For instance, a Polygon made up of bordering points (0, 0), (0, 10), and (10, 0) still needs to have the same meaning---a triangle with those three points---no matter where its format or location. GeoJSON files and Shapefiles, Python objects, WKT or GeoJSON notation, and PostGIS data structures can all be inspected to ensure that the same data is contained in each. If it isn't, the data was misshaped somewhere along the line that can be traced.
+GeoJSON, Shapefiles, Python objects, WKT, and PostGIS data structures can all be inspected to see that the same data is contained in each. If not, it was misshaped somewhere along the line---traceable with these ``checkpoints.''

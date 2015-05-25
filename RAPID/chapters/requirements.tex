@@ -1,23 +1,23 @@
 \chapter{Requirements}
 \label{requirements}
 
-The previous discussions overview motivations and practices for pipeline integrity management. We've also covered the geographic and technological framework that RAPID works within---primarily adhering to OGC's Abstract Specification. Alongside external pipeline operating partners, our team established additional requirements for RAPID's domain-specific functionality.
+The previous discussions overview motivations and practices for pipeline integrity management. We have also covered the geographic and technological framework that RAPID works within---primarily adhering to OGC's Abstract Specification. Alongside external pipeline operating partners, our team established additional requirements for RAPID's domain-specific functionality.
 
 At a high level, our goal is to combine the earlier-mentioned spatial operations and formats with updatable and searchable  geographic data. Partner organizations also require permissioning capabilities (so that private and proprietary information is not shared with unprivileged requestors).
 
-These broad characteristics are spelled out below, and we describe the subsequent system design for meeting these requirements in Chapter~\ref{design}.\footnote{Of additional note, these requirements are particularly suited to RAPID's \textit{data model}. Other tertiary requirements exist for the REST API---pertaining to its style and usage---but many of those are derived from the central points of this chapter. Francis, in her thesis, describes the API's requirements and design in depth~\cite{Francis}.}\footnote{Also be aware that our contribution is primarily visible at the code level, but some of the terminology and capabilities carry through to external developers and end users. These requirements end up spanning different stakeholders and levels of abstraction, but they're still the most important asks and agreements that formed our design.}
+These broad characteristics are spelled out below, and we describe the subsequent system design for meeting these requirements in Chapter~\ref{design}.\footnote{Of additional note, these requirements are particularly suited to RAPID's \textit{data model}. Other tertiary requirements exist for the REST API---pertaining to its style and usage---but many of those are derived from the central points of this chapter. Francis, in her thesis, describes the API's requirements and design in depth~\cite{Francis}.}\footnote{Also be aware that our contribution is primarily visible at the code level, but some of the terminology and capabilities carry through to external developers and end users. These requirements end up spanning different stakeholders and levels of abstraction, but they are still the most important asks and agreements that formed our design.}
 
 \section{Related work and standards}
-We discovered several geospatial data stores and aggregators, but RAPID's design doesn't directly draw from these related systems. They sometimes perform similar tasks, so we pause to clarify differences.
+We discovered several geospatial data stores and aggregators, but RAPID's design does not directly draw from these related systems. They sometimes perform similar tasks, so we pause to clarify differences.
 
 \subsection{Web Feature Service}
-OGC's Web Feature Service (WFS) is a lengthy and highly-specific standard for geospatial data storage, formatting, and transmission~\cite{WFS}. Several existing reference implementations also exist~\cite{RefImpl}. While this complex, in-use standard outdoes RAPID's capabilities in some scenarios, there's currently no standard specification for spatial REST APIs~\cite{WFS}.
+OGC's Web Feature Service (WFS) is a lengthy and highly-specific standard for geospatial data storage, formatting, and transmission~\cite{WFS}. Several existing reference implementations also exist~\cite{RefImpl}. While this complex, in-use standard outdoes RAPID's capabilities in some scenarios, there is currently no standard specification for spatial REST APIs~\cite{WFS}.
 
-This gives our team the opportunity to create the ecosystem we see fit---even allowing non-GIS developers to incorporate RAPID data relatively pain-free. Our validation software, RAPID UI,\footnote{Introduced in Section~\ref{polyview_intro} and detailed in Chapter~\ref{validation}.} for instance, would likely not have the resources to interface with a WFS directly, but can still make use of RAPID because of its idiomatic REST API.
+This gives our team the opportunity to create the ecosystem we see fit---even allowing non-GIS developers to incorporate RAPID data relatively pain-free. Our validation software, RAPID UI,\footnote{Introduced in Section~\ref{polyview_intro} and detailed in Chapter~\ref{validation}.} for instance, would not otherwise have the resources to interface with a WFS directly, but can still make use of RAPID because of its idiomatic REST API.
 
 \subsection{FeatureServer}
 
-One related system we're aware of, a 2012 open-source project called FeatureServer, implements many OGC standards, allowing for automated and full-featured data querying---even adding a REST API for some use cases~\cite{FeatureServ}.
+One related system we are aware of, a 2012 open-source project called FeatureServer, implements many OGC standards, allowing for automated and full-featured data querying---even adding a REST API for some use cases~\cite{FeatureServ}.
 
 To clarify the difference between FeatureServer and RAPID, though: FeatureServer expects users (developers) to have a thorough understanding of these specific OGC standards, and it acts mostly as a set of helper tools for customers already working amongst those standards~\cite{FeatureServ}. While FeatureServer is a sort of stepping stone between GIS and WFSs, RAPID is lighter-weight and focuses on gathering and serving real data, even when it may not end up in a commercial GIS.
 
@@ -29,46 +29,48 @@ As outlined in the Background, numerous geospatial data formats exist for use in
 Throughout our own experimentation and research, GeoJSON and Shapefiles (both summarized in Chapter~\ref{background}) emerged as reasonable starting points for file importing in RAPID. There are several reasons:
 
 \begin{description}
-  \item[Availability.] Many (or even most) high-profile, public geospatial datasets are archived in one or both of these formats.
+  \item[Availability.] Many (or even most) high-profile, public geospatial datasets are archived in one or both of these formats, including ones of interest for our external partners.
   \item[Standardization.] While not wholly formulated by the OGC, both GeoJSON and Shapefiles incorporate the Abstract Specification, and other components of the formats are open standards~\cite{Environ1998,GeoJSON}. This, in part, drives their ubiquity and availability.
   
-Shapefiles, primarily Esri's creation for their ArcGIS software, include many standard \textit{and} non-standard amendments and appendages. While some of these are used to enable extended functionality in proprietary systems, they're often used for (optional) performance tuning~\cite{Environ1998}. That is, the most essential vector data is openly specified, and the other components aren't particularly important to us.
+Shapefiles, primarily Esri's creation for their ArcGIS software, include many standard \textit{and} non-standard amendments and appendages. While some of these are used to enable extended functionality in proprietary systems, they are often used for (optional) performance tuning~\cite{Environ1998}. That is, the most essential vector data is openly specified, and the other components are not particularly important to us.
 
 \item[Toolsets.] Thanks to their standardization and popularity, these formats  are well-supported by many open-source spatial libraries and frameworks. This means a lot of robust, reusable functionality for parsing and validation already exists (which we use and discuss later).
 
 \item[Abstraction and conversion.] Again, with the consideration that these vector formats are standardized and built on top of the Abstract Specification, their data types can store and represent the \textit{same information}~\cite{AbstractSpecFaq}.
 
-Further, these representations can be converted from one to another: the vectors of a valid GeoJSON file can be entirely converted to a Shapefile with the same vectors. This also means that end users---even third party developers---don't often need to know the underlying detail of which file format was used at one point or another. In the case that one particular format is required, the conversion is mostly trivial.
+Further, these representations can be converted from one to another: the vectors of a valid GeoJSON file can be entirely converted to a Shapefile with the same vectors. This also means that end users---even third party developers---do not often need to know the underlying detail of which file format was used at one point or another. In the case that one particular format is required, the conversion is mostly trivial.
 
 \item[GeoJSON readability and ubiquity.] GeoJSON's relatively user-friendly and readable syntax (extended from JSON) lets nontechnical stakeholders and contractors understand (and even generate) structured geospatial data with minimal training.
 
-Additionally, the JSON component of GeoJSON particularly suits it for other programming tasks (and software that's not necessarily in the GIS space). Many other formats are only known and initially usable by geospatial professionals, but JSON is accessible for a large portion of developers.
+Additionally, the JSON component of GeoJSON particularly suits it for other programming tasks (and software that is not necessarily in the GIS space). Many other formats are only known and initially usable by geospatial professionals, but JSON is accessible for a large portion of developers.
 
 \end{description}
 
 \subsection{Output}
-For the same reasons that we settled on GeoJSON and Shapefiles as input formats, they both made sense as output formats, and data in RAPID can be exported as either (no matter the input format).\footnote{This decision was helpful as a practical matter, too: with the tools and libraries we're using, it's less difficult to export formats we've already researched and configured for decoding.} While a commercial, enterprise-ready application might implement several extensive OGC standards (like WFS) for data exchange and parsing---enabling instant plug-and-play functionality for some GIS---GeoJSON, supplemented by Shapefiles, was chosen as a reasonable starting point. It's also not difficult to find open-source libraries that convert these formats to other OGC-compliant ones.\footnote{This functionality could be added to RAPID; it just doesn't exist yet.}
-
+For the same reasons that we settled on GeoJSON and Shapefiles as input formats, they both made sense as output formats, and data in RAPID can be exported as either (no matter the input format).\footnote{This decision was helpful as a practical matter, too: with the tools and libraries we're using, it's less difficult to export formats we have already researched and configured for decoding.} While a commercial, enterprise-ready application might implement several extensive OGC standards (like WFS) for data exchange and parsing---enabling instant plug-and-play functionality for some GIS---GeoJSON, supplemented by Shapefiles, was chosen as a reasonable starting point. Additionally, it is not difficult to find open-source libraries that convert these formats to other OGC-compliant ones.\footnote{This functionality could be added to RAPID, it just does not exist yet.}
 
 \section{Data storage}
 \label{reqs_layers}
-As we've discussed, the core geographic data model, with geometries and arbitrary properties, is mostly standardized. RAPID begins to differentiate itself with how data is grouped and queried: it's a requirement to have ``layers'' of data, collecting features within user-defined categories---think categorization of weather stats versus census numbers.\footnote{In practice, we don't dictate how to separate layers logically or assign their metadata, but the concept of disparate (but grouped) data is central to RAPID's functionality.}
+As discussed, the core geographic data model, with geometries and arbitrary properties, is mostly standardized. RAPID begins to differentiate itself with how data is grouped and queried: it is a requirement to have ``layers'' of data, collecting features within user-defined categories---(think categorization of weather stats versus census numbers).\footnote{In practice, we do not dictate how to separate layers logically or assign their metadata, but the concept of disparate (but grouped) data is central to RAPID's functionality.}
 
 \paragraph{Example.}
-Every five minutes, the United States Geological Survey (USGS) publishes a GeoJSON file on their website of earthquakes from around the world (locations, magnitudes, depths, and such). If RAPID retrieves data at the same five-minute refresh rate, after some hours, it can process tens of GeoJSON input files from the USGS containing hundreds of spatial seismic measurements, all slotted into the same ``earthquake'' category. Our design later names these collections of like features \textit{DataLayers}.
+Every five minutes, the United States Geological Survey (USGS) publishes a GeoJSON file on their website of earthquakes from around the world (locations, magnitudes, depths, and such). If RAPID is asked to import that data every five minutes also, after some hours, it can process tens of GeoJSON input files from the USGS containing hundreds of spatial seismic measurements, all slotted into the same ``earthquake'' category. Our design later names these collections of like features \textit{DataLayers}.
 
-While visible under the hood, RAPID won't reveal which features came from which files. Even data fetched from several different sources is, effectively, merged (that is, a pipeline operator could have more granular seismic data alongside the USGS feed); from then on, all seismic data is accessible through one uniform, queryable DataLayer.
+While visible under the hood, RAPID will not reveal which features came from which files. Even data fetched from several different sources is, effectively, merged (that is, a pipeline operator could have more granular seismic data alongside the USGS feed); from then on, all seismic data is accessible through one uniform, queryable DataLayer.
 
 \subsection{Updatability}
-In the previous example, we alluded to RAPID's data modification capabilities and the expectation to regularly retrieve new data. Existing DataLayers need to seamlessly integrate new measurements as they become available.
+In the previous example, we alluded to RAPID's data modification capabilities: existing DataLayers need to seamlessly integrate new measurements as they become available.
 
 Similarly, stored data must be modifiable at the feature level through the API; users and applications should not have to edit and resubmit whole Shapefiles or GeoJSON files to slightly tweak stored objects. In this way, the entire procedure is programmable and allows for fine-grained manipulation when necessary.
+
+\subsection{Geospatiotemporality}
+\textit{[Finish this blurb. Already discussed in more detail in Chapter~\ref{design}.]}
 
 \section{Querying}
 
 Introduced in~\ref{reqs_layers}, RAPID must be programmatically queryable (for the sake of external DSSs), fetching subsets of spatial data filtered by layer, location, and time, and DataLayers can be further characterized by this process. In most cases, data from a single DataLayer will be analyzed similarly or aggregated. If a pipeline operator DSS seeks rainfall trends (for example), every feature in RAPID's rainfall DataLayer can be returned, and relevant information is available for study.
 
-For the sake of efficiency and user-friendliness, RAPID can offload, from external software, ``cropping'' of data by time and region. That is, users have the option to specify a sub-area and timeframe for data export. Refer back to Chapter~\ref{background} for specific examples of spatial table selections and joins, but consider RAPID's common use case: the system will gather, export, and transfer recent geographic features for a defined space (represented as a Polygon). Features within\footnote{``Within'' is a technical term---a function---in Simple Features Access, but we aren't using it as such here. We simply mean to designate features contained by or encroaching on the specified region.} the Polygon and in the correct time period are processed and returned to requestors.
+For the sake of efficiency and user-friendliness, RAPID can offload, from external software, ``cropping'' of data by time and region. That is, users have the option to specify a sub-area and timeframe for data export. Refer back to Chapter~\ref{background} for specific examples of spatial table selections and joins, but consider RAPID's common use case: the system will gather, export, and transfer recent geographic features for a defined space (represented as a Polygon). Features within\footnote{\texttt{Within} is a function in Simple Features Access, but we are not using the term as such here. We simply mean to designate features contained by or encroaching on the specified region.} the Polygon and in the correct time period are processed and returned to requestors.
 
 \subsection{Monitored regions}
 We solidify the concept of queryable view subsets by making them nameable and saveable---stored in RAPID for indexing and retrieval. Our design later names these stored, on-demand filters \textit{GeoViews}.
@@ -83,8 +85,8 @@ Chapter~\ref{design} explains our developed permissioning system in further deta
 \section{Modularity and abstraction}
 While this is not an explicit technical requirement, the system architecture should be modular---easily-maintainable with concerns separated. This is for a few reasons:
 
-RAPID will likely see further development in the next several years with different software engineers and stakeholders. While the current RAPID system is a helpful tool for many geospatial operations, we recognize the demand for a broader platform of data aggregation, monitoring, and retrieval, allowing more extensive features down the road.
+RAPID will likely see further development in the next several years with different software engineers and stakeholders. While the current RAPID system is a helpful tool for many geospatial operations, we recognize the demand for a broader platform of data aggregation, monitoring, and retrieval, allowing more extensive functionality down the road.
 
-Ideally, more advanced functionality will fit directly into the models and workflows we've already created; when it doesn't, the RAPID codebase still must be flexible enough to incorporate new work without entirely dismantling existing features and recreating large components from scratch.
+Ideally, more advanced functionality will fit directly into the models and workflows we have already created; when it does not, the RAPID codebase still must be flexible enough to incorporate new work without entirely dismantling existing features and recreating large components from scratch.
 
-From discussions with external partners, we've heard that potential add-ons could be support for additional file formats, near-real-time notifications, or even encryption. New developers should be able to join the project, understand the system design quickly, and then add features like these wherever they most belong.
+From discussions with external partners, we have heard that potential add-ons could be support for additional file formats, near-real-time notifications, or even encryption. New developers should be able to join the project, understand the system design quickly, and then add features like these wherever they most belong.
