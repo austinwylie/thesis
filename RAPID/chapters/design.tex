@@ -251,7 +251,7 @@ Taken together, a small subset of RAPID classes enables structured data storage 
 
 Figures~\ref{fig:feature},~\ref{fig:datalayer}, and~\ref{fig:geoview} show relevant portions of our \texttt{models.py} file for the three models we've discussed throughout this paper. Figure~\ref{fig:3er}, shows a simple entity-relationship diagram to clarify the setup. 
 
-\textit{[Fix ER style.]}
+\textit{[Fix diagram style to match Alex's preferences.]}
 
 % archive = models.ForeignKey(Archive, null=True)
 
@@ -328,13 +328,11 @@ A foreign key references the Feature's DataLayer---the DataLayers's UID. Note th
 
 \textbf{Implementation note.} This one-way relationship, however, doesn't preclude us from traversing the relationship in the other direction---seeing all the Features for a DataLayer. That alternative action is common enough, and Django makes the querying easy: 
 
-\begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
+\begin{Verbatim}[samepage=true,baselinestretch=1,xleftmargin=12mm]
 features = layer.feature_set
 \end{Verbatim}
 
 Even though a \texttt{feature\_set} isn't explicitly defined for a DataLayer, Django adds the property implicitly and handles the reverse lookup of the primary keys behind the scenes.
-
-
 
 \end{description}
 
@@ -439,7 +437,7 @@ The only remaining consideration is how to incorporate Feature properties. When 
 \section{Multi-tenancy and permission management}
 Chapter~\ref{requirements} laid out permissioning capabilities for RAPID DataLayers and GeoViews. That functionality is enabled by adding several components: the entity-relationship diagram in Figure~\ref{fig:er} builds on the diagram in Figure~\ref{fig:3er}, showing the additional classes that make this an operational multi-tenant system.
 
-\textit{[Fix ER style.]}
+\textit{[Fix diagram style to match Alex's preferences.]}
 
 \begin{figure}[ht]
     \centering

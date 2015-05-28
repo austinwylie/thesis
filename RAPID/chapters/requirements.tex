@@ -58,13 +58,13 @@ Every five minutes, the United States Geological Survey (USGS) publishes a GeoJS
 
 While visible under the hood, RAPID will not reveal which features came from which files. Even data fetched from several different sources is, effectively, merged (that is, a pipeline operator could have more granular seismic data alongside the USGS feed); from then on, all seismic data is accessible through one uniform, queryable DataLayer.
 
+\subsection{Geospatiotemporality}
+Trend-watching provides an important perspective on geospatial data: pipeline operators and DSS find it helpful to narrow datasets by a time range for in-depth study. Therefore, RAPID must include a timestamp with its stored geospatial features, letting requestors retrieve only the most relevant datapoints, which are \textit{geospatiotemporal}. By analyzing other metadata along with this timestamp, DSS can see desirable or worrying trends.
+
 \subsection{Updatability}
 In the previous example, we alluded to RAPID's data modification capabilities: existing DataLayers need to seamlessly integrate new measurements as they become available.
 
 Similarly, stored data must be modifiable at the feature level through the API; users and applications should not have to edit and resubmit whole Shapefiles or GeoJSON files to slightly tweak stored objects. In this way, the entire procedure is programmable and allows for fine-grained manipulation when necessary.
-
-\subsection{Geospatiotemporality}
-\textit{[Finish this blurb. Already discussed in more detail in Chapter~\ref{design}.]}
 
 \section{Querying}
 

@@ -1,0 +1,40 @@
+\chapter{Closing discussion}
+\label{conclusions}
+
+Largely concluding our discussion on RAPID, we review our initial mandates and subsequent approach to creating and validating the system. Last, we describe future work that can directly build on our contributions.
+
+\section{Project summary}
+Over the course of this document, we introduce novel and complex GIS topics, showing how geographic datasets are standardized, stored, and queried. We, additionally, explain Django's advantages for designing and programming a spatial, multi-tenant data store. We discuss the high-level requirements we created and were assigned---with attention paid to pipeline-operating colleagues, non-expert web developers, and OGC standards---and how RAPID was built to satisfy them: our data model, coupled with Francis's public-facing API, enables the expected functionality. Validating our design and implementation, we 1) show another developer's accomplishments made possible by RAPID and 2) illustrate efficient performance in everyday situations.
+
+\section{Future work}
+There are high aspirations for the data that RAPID collects and serves: letting artificial intelligence plan pipeline routes and sound urgent alarms would be a boon to integrity management processes~\cite{Dunning2013}. Even without advanced algorithm development from other parties, by gathering and merging these data sets---always subject to business policies---we have set the stage for unique and useful DSS analyses. The following list sums up future work that we recommend (or already anticipate occurring) to upgrade the entire RAPID system of geospatial data aggregation and analysis.
+
+\begin{itemize}
+
+    \item We previously discuss that RAPID Features include a timestamp, allowing DataLayers to be queried geospatiotemporally. As a stop-gap, this timestamp is populated when the Feature is first added to the system, setting it to the current system time.
+    
+    Timestamps are not a standardized component of Features in the Abstract Specification or Simple Features Access; therefore, we can't count on a set of abstract steps to extract a relevant date and time~\cite{SFA}. As a data mining exercise, Feature properties could be searched to extract custom (or common) timestamp conventions. Alternatively (and with more API design), users could specify property fields that contain timestamps in a known format.
+    
+    \item While GeoJSON and Shapefiles are popular---and many other GIS formats can be converted to them for use in RAPID---the more formats RAPID supports natively, the better. Additional parsers and generators could be added to improve the import capabilities' user-friendliness. As we mentioned in Chapter~\ref{design}, this is not terribly difficult, as the most critical RAPID logic is already encapsulated in our \texttt{select.py} methods.
+    
+    \item Logic is already present for retrieving GeoJSON and Shapefiles from URLs and local files, but \textit{not} automatically over time. This is primarily because it requires relatively-complicated scheduling utilities (as well as web server support). Future developers would define the API mechanics for this too---that is, how users (or applications) specify regularly-fetched locations and at what intervals.
+    
+    \item We currently use commandline scripts to generate and (manually) distribute API tokens. This works for our initial small-scale offering, but for a large, active system with many users, a web-based user interface would make the process hands-off and much smoother.
+    
+    Furthermore, we would recommend adding functionality for email-associated user accounts that may generate (and expire) API tokens at-will.\footnote{It is reasonable to allow multiple tokens per user: a user could manage a RAPID account for a whole organization, but they may still think it important to define permissions per application. That is, one organization might use multiple RAPID-connected programs that require different permissions.} Incorporating permission management tools---so that people can view and modify shared-tenant setups---would also move RAPID closer to commercial-readiness.
+    
+    \item Our testing and discussions for RAPID often revolve around public datasets, easily found on the Internet or available through local governments and research bodies. We realize, though, that certain customer data could be so highly-protected that it needs to be encrypted at rest (not just hidden from unprivileged API tokens---we already account for that). Although certain levels of encryption are possible, there are significant tradeoffs and performance implications: one could encrypt only geometry data or both geometries and properties.\footnote{We limit this discussion to Feature encryption, but there may also be interest in encrypting DataLayer or GeoView metadata. That would have its own requirements and complexities, but it would be doable, and one doesn't have to consider geometries (other than a potential bounding box on DataLayers).}
+    \begin{itemize}
+        \item By encrypting a Feature's properties, information \textit{about} a place would be confidential, but the place itself is not encrypted. RAPID querying would work mostly as it does currently, but those attributes would have to be decrypted before use, adding that extra processing and hurting performance.
+        \item Encrypting geometric data of a Feature would hide \textit{where} data occurs. Because encrypted geometries cannot be directly queried---the spatial information is scrambled---system performance would take a massive hit. In other words, PostGIS loses its ability to create spatial indexes; an entire data set must be decrypted before performing \textit{any} spatial queries (not to mention nicely-indexed ones).
+    \end{itemize}
+    
+    \item Quite interestingly, our choice of JSON as a key-value property store could make RAPID querying significantly more powerful with just a PostgreSQL update: PostgreSQL 9.4---RAPID runs on 9.3---introduces the \texttt{jsonb} data type, allowing for SQL queries \textit{within} the JSON field's key-value pairs. Rather than forcing Features into GeoViews (queryable by space and time), third parties (with API changes) could look up and analyze Features by arbitrary properties much more efficiently than they otherwise could.
+    
+    \item When RAPID imports files, brand new data is (likely) available to the system---previously unavailable for analysis through our tools. Because there's new, potentially-important information to act on, pipeline operators would appreciate getting notified of certain occurrences or changes in RAPID. For example, a certain type of Feature (like construction equipment) in a particular region might be worthy of a warning. Specific properties, too, could be useful for on-the-fly analysis, notifying users of specific conditions in a location. For example, a certain amount of rain or seismic activity in an area might require immediate investigation.
+    
+     This functionality would tie in nicely with emails and our user accounts, as well as JSON querying through PostgreSQL.
+    
+    \item When considering full OGC Compliance for RAPID (like the WFS standard), we had to balance its potential advantages with the resources it would take to correctly implement it. However, we ensured that RAPID is a \textit{standard-enough} base for this future work. In other words, we worked hard to make Features standard and portable; moving toward a WFS implementation would tweak the format and fashion in which they are queried and transferred.
+
+\end{itemize}
