@@ -47,7 +47,7 @@ Additionally, the JSON component of GeoJSON particularly suits it for other prog
 \end{description}
 
 \subsection{Output}
-For the same reasons that we settled on GeoJSON and Shapefiles as input formats, they both made sense as output formats, and data in RAPID can be exported as either (no matter the input format).\footnote{This decision was helpful as a practical matter, too: with the tools and libraries we're using, it's less difficult to export formats we have already researched and configured for decoding.} While a commercial, enterprise-ready application might implement several extensive OGC standards (like WFS) for data exchange and parsing---enabling instant plug-and-play functionality for some GIS---GeoJSON, supplemented by Shapefiles, was chosen as a reasonable starting point. Additionally, it is not difficult to find open-source libraries that convert these formats to other OGC-compliant ones.\footnote{This functionality could be added to RAPID, it just does not exist yet.}
+For the same reasons that we settled on GeoJSON and Shapefiles as input formats, they both made sense as output formats, and data in RAPID can be exported as either (no matter the input format).\footnote{This decision was helpful as a practical matter, too: with the tools and libraries we use, it is less difficult to export formats we have already researched and configured for decoding.} While a commercial, enterprise-ready application might implement several extensive OGC standards (like WFS) for data exchange and parsing---enabling instant plug-and-play functionality for some GIS---GeoJSON, supplemented by Shapefiles, was chosen as a reasonable starting point. Additionally, it is not difficult to find open-source libraries that convert these formats to other OGC-compliant ones.\footnote{This functionality could be added to RAPID, it just does not exist yet.}
 
 \section{Data storage}
 \label{reqs_layers}
@@ -59,7 +59,7 @@ Every five minutes, the United States Geological Survey (USGS) publishes a GeoJS
 While visible under the hood, RAPID will not reveal which features came from which files. Even data fetched from several different sources is, effectively, merged (that is, a pipeline operator could have more granular seismic data alongside the USGS feed); from then on, all seismic data is accessible through one uniform, queryable DataLayer.
 
 \subsection{Geospatiotemporality}
-Trend-watching provides an important perspective on geospatial data: pipeline operators and DSS find it helpful to narrow datasets by a time range for in-depth study. Therefore, RAPID must include a timestamp with its stored geospatial features, letting requestors retrieve only the most relevant datapoints, which are \textit{geospatiotemporal}. By analyzing other metadata along with this timestamp, DSS can see desirable or worrying trends.
+Trend-watching provides an important perspective on geospatial data: pipeline operators and DSS find it helpful to narrow datasets by a time range for in-depth study. Therefore, RAPID must include a timestamp with its stored geospatial features, letting requestors retrieve only the most relevant datapoints, which are \textit{geospatiotemporal}. By analyzing other metadata along with this timestamp, DSS can find desirable or worrying trends.
 
 \subsection{Updatability}
 In the previous example, we alluded to RAPID's data modification capabilities: existing DataLayers need to seamlessly integrate new measurements as they become available.
@@ -89,4 +89,4 @@ RAPID will likely see further development in the next several years with differe
 
 Ideally, more advanced functionality will fit directly into the models and workflows we have already created; when it does not, the RAPID codebase still must be flexible enough to incorporate new work without entirely dismantling existing features and recreating large components from scratch.
 
-From discussions with external partners, we have heard that potential add-ons could be support for additional file formats, near-real-time notifications, or even encryption. New developers should be able to join the project, understand the system design quickly, and then add features like these wherever they most belong.
+From discussions with external partners, we have heard that potential add-ons could be support for additional file formats, near-real-time notifications, or even encryption. New developers should be able to join the project, understand the system design quickly, and then add features like these wherever they most belong. In Chapter~\ref{conclusions}, we discuss potential future work.

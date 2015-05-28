@@ -32,7 +32,7 @@ The terms ``GIS'' and ``SDSS'' sometimes overlap ambiguously~\cite{Peterson}. GI
 GIS functionality can usually be placed in one of five categories~\cite{Esriintro}:
 
 \begin{description}
-  \item[Mapping object locations.] Descriptors can be assigned to points in space (take addresses, for example). In a technical sense, this is usually seen as associating string-like data---ideas or concepts (like place names)---with floating-point latitude and longitude. These are commonly called \textit{features} (central to any geospatial system)~\cite{Kottman2009}.
+  \item[Mapping object locations.] Descriptors can be assigned to points in space (take addresses, for example). In a technical sense, this associates string-like data---ideas or concepts (like place names)---with floating-point latitude and longitude. These are commonly called \textit{features} (central to any geospatial system)~\cite{Kottman2009}.
   \item[Mapping quantities.] Quantities can be mapped to certain points---to relating locations with calculable data about them. This could be integers and floating point values, again, assigned to latitude and longitude. These are also considered \textit{features}. For example, earthquake have a \textit{numeric} magnitude.
   \item[Mapping densities.] Not only can values be assigned to specific points on a map, densities can be generated and displayed, which show the distribution of objects or values over an area. Continuous atmospheric datasets visualize this nicely.
   \item[Determining relative positions of objects.] GIS can determine if spatial entities are located within or near each other. Additionally, they measure distances between objects and locations and determine whether or not they intersect. This can show when specific hazards encroach upon pipelines (all represented as features).
@@ -51,10 +51,10 @@ Considering the above, two common file and data types have emerged in GIS: vecto
 \subsection{Abstract Specification}
 OGC's Abstract Specification describes and standardizes the essential components of geospatial data, including the central information model and glossary for all OGC Standards~\cite{AbstractSpecFaq}.
 
-Any sizable geospatial software system is naturally governed by certain geographic and geometric properties and functions; the Abstract Specification is the OGC's formalization of those concepts, all of which are encompassed in the data types and formats in the upcoming sections~\cite{AbstractSpecFaq}. The idea of a geospatial \textit{feature} (described in Section~\ref{gis_feature} above), for instance, is an essential concept~\cite{Kottman2009,AbstractSpecFaq}.
+Any sizable geospatial software system is naturally governed by certain geographic and geometric properties and functions; the Abstract Specification is the OGC's formalization of those concepts, all of which are encompassed in the data types and formats in the upcoming sections~\cite{AbstractSpecFaq}. The idea of a geospatial \textit{feature} (described in Section~\ref{gis_feature} above), for instance, is essential~\cite{Kottman2009,AbstractSpecFaq}.
 
 \subsection{Simple Features Access}
-One foundational OGC standard, Simple Features Access (ISO 19125) defines the official data storage and access model for geospatial features~\cite{SFA}. As with many other standards and GIS-focused designs, Simple Features Access builds directly on the Abstract Specification's established concepts~\cite{SFA,AbstractSpecFaq}. The SQL statements and spatial operators described later in this chapter are directly shaped by the Simple Features Access standard.
+One foundational OGC standard, Simple Features Access (ISO 19125) defines the official data storage and access model for geospatial features~\cite{SFA}. As with many other standards and GIS-focused designs, Simple Features Access builds directly on the Abstract Specification~\cite{SFA,AbstractSpecFaq}. The SQL statements and spatial operators described later in this chapter are directly shaped by the Simple Features Access standard.
 
 \paragraph{Projection.}
 There are many different mathematical and geographic coordinate systems and projections---created and suited for different tasks and locations---but they are not necessarily compatible with each other~\cite{Kottman2009}. OGC standardizes unique Spatial Reference System Identifiers (SRIDs) in Simple Features Access to differentiate in-use coordinate systems~\cite{SFA}. To correctly identify, parse, and measure geometries, they must have a specific, known SRID~\cite{Kottman2009}.
@@ -119,6 +119,8 @@ With the following four pieces of information (and some accompanying calculation
   \item Rotation of the grid
 \end{itemize}
 
+RAPID does not query raster data directly, but its geographic footprint can be represented as a vector, with its additional information encoded as serialized properties.
+
 \section{Data storage}
 \label{storage}
 This section overviews several storage considerations for GIS data that is most relevant to RAPID.
@@ -128,7 +130,7 @@ Because of the unique data considerations described earlier, databases that mana
 
 \paragraph{Example.}
 \label{background_wkt}
-Inserting geometries (vector data) into a spatial DBMS looks like the syntax in Figure~\ref{fig:spatialsql}, where we use a SQL statement to add geometries to a PostGIS table (RAPID's underlying DBMS). These SQL statements demonstrate the creation of four geometric types in a geospatial database: Point, Linestring, Polygon, and Polygon with holes. The results of the SELECT are shown in Figure~\ref{fig:sqlresult}. Note that the generic \texttt{geometry} data type, shown in the figure's \texttt{geometries} table, is also standardized in Simple Features Access, which can store any of the more specific geospatial types~\cite{Boundless,SFA}.
+Inserting geometries (vectors) into a spatial DBMS canbe done as in Figure~\ref{fig:spatialsql}, where we use a SQL statement to add geometries to a PostGIS table (RAPID's underlying DBMS). These SQL statements demonstrate the creation of four geometric types in a geospatial database: Point, Linestring, Polygon, and Polygon with holes. The results of the SELECT are shown in Figure~\ref{fig:sqlresult}. Note that the generic \texttt{geometry} data type, shown in the figure's \texttt{geometries} table, is also standardized in Simple Features Access, which can store any of the more specific geospatial types~\cite{Boundless,SFA}.
 
 \begin{figure}
 \begin{Verbatim}[samepage=true,baselinestretch=1,numbers=left,xleftmargin=12mm]
@@ -171,9 +173,7 @@ FROM geometries;
 In terms of notation, the space-separated numbers are a coordinate pair. Commas separate the points, creating ordered series. This particular syntax is Well-Known Text (WKT), an OGC Standard for defining Abstract Specification geometries~\cite{ogc}. Those PostGIS geometric data types---\texttt{POINT}, \texttt{LINE}, \texttt{LINESTRING}, and \texttt{POLYGON}---correspond to the vector types described above in Section~\ref{sec:vector}.
 
 \subsubsection{Querying}
-Simple Feature Access, introduced above, defines several required methods for comparing and relating Geometries, summarized below~\cite{SFA}. Figures~\ref{fig:touches} through~\ref{fig:within} visualize four of these relational operators, as examples.
-
-\textit{[Add remaining example figures.]}
+Simple Feature Access, introduced above, defines several required methods for comparing and relating Geometries, summarized below~\cite{SFA}. Figures~\ref{fig:touches} through~\ref{fig:within} visualize several of these relational operators, as examples.
 
 \begin{figure}
     \centering
@@ -222,7 +222,7 @@ Simple Feature Access, introduced above, defines several required methods for co
   \item[Cross.] Tests if the intersection of two Geometries is in one dimension fewer than the source Geometries.
   \item[Overlap.] Determines if the intersection of two Geometries is different from both the source Geometries but of the same dimension. See Figure~\ref{fig:overlap}.
   \item[Touch.] Tests whether Geometries have their boundaries touching (without intersected interiors). See Figure~\ref{fig:touches}.
-  \item[Within and Contains.] Test if a Geometry is fully inside of another. See Figure~\ref{fig:within}.
+  \item[Within.] Test if a Geometry is fully inside of another. See Figure~\ref{fig:within}.
   \item[Distance.] Calculates the shortest distance between two Geometries. Note that this is the only operator without a boolean result.
   \item[DWithin.] Tests whether Geometries are within a specified distance of each other. Note that this is the only boolean relational operator that takes an additional argument (the distance).
 \end{description}

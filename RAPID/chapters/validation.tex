@@ -18,7 +18,7 @@ Francis describes our work with Patel in-depth---she worked with him to design a
 \begin{itemize}
 \item A primary goal in researching GIS standards and technologies was to ensure RAPID operates as expected when handling (rather finicky) geospatial data. Therefore, we set up several sample DataLayers (from GeoJSON and Shapefiles) for RAPID UI to attempt retrieving and visualizing. In particular, we had the goal of requiring as little custom UI logic as possible---relying instead upon pre-built GIS tools.
 
-Patel and Francis ensured RAPID UI could properly request data and handle GeoJSON responses through the API (using common HTTP libraries in Python and JavaScript). After RAPID UI fetches standardized files, using particular geospatial libraries \textit{should and does} let the application parse and visualize our data in one step.
+Patel and Francis ensure RAPID UI could properly request data and handle GeoJSON responses through the API (using common HTTP libraries in Python and JavaScript). After RAPID UI fetches standardized files, using particular geospatial libraries \textit{should and does} let the application parse and visualize our data in one step.
 
 \textit{[Add screenshot.]}
 
@@ -30,19 +30,35 @@ This characteristic is demonstrably useful: out-of-date Features can be imported
 \end{itemize}
 
 \section{Performance}
-The previous section shows that, given our data model and business logic, RAPID operates properly; we now use this section to highlight our core data model's performance, showing that it is an efficient base for future additions. We point out specific interface actions that typify DSS work and compare their runtimes.
+The previous section shows that, given our data model and business logic, RAPID operates properly; we now use this section to highlight our core data model's performance, showing that it is an efficient foundation for future additions. We point out specific interface actions that typify DSS work and compare their runtimes.\footnote{Performance testing spatial schemas and source code could be a thesis to itself. Here, we cast a wide net, but still tackle our most visible and potentially-taxing operations.}
 
-\subsection{Setup}
-\textit{[Finish this section. Use three dataset sizes for Features: small (tens), medium (thousands), large (hundred-thousands). Test both Points and Polygons (significantly different complexities for spatial operators). Also check performance for directly retrieving a GeoView and its DataLayers.]}\footnote{Performance testing spatial schemas and source code could be a thesis to itself. Here, we cast a wide net, but still tackle our most visible and potentially-taxing operations.}
+Spatial Feature querying is RAPID's main bottleneck. During region-specific lookups (like with GeoViews), the system must filter each Feature in a DataLayer based on spatial calculations. Automatic spatial indexing in PostGIS amortizes this, but the process is still more demanding than \texttt{SELECT} statements using one indexed unique identifier.\footnote{Although B-Trees will index fully-accurate geometries in PostGIS, Django (by default) creates \textit{bounding box} indexes with R-Trees (see the \texttt{CREATE TABLE} and \texttt{CREATE INDEX} statements in Figure~\ref{fig:sql}). While keeping the whole geometry indexed would improve querying performance, the index can grow so large that it is impractical, and using a bounding box is often reasonable middle ground.}
 
-% small, medium, large
-% points, polygons
-% Specific features
-% DataLayer lookup
-% GeoView lookup
+To study RAPID's spatial querying, we run several performance tests. One high-reaching goal for the system's future is to manage and fetch data for a whole continent; however, we just as likely expect some customers to work with smaller numbers of Features. Therefore, we test three dataset sizes, each separated by a multiplication factor of 100 Features: small (10), medium (1,000), and large (10,000).
 
-\subsection{Results}
-\textit{[Finish this section.]}
+Because the numbers of coordinates pairs can be orders of magnitudes different, we test spatial filtering on both Polygons and Points. Our Point dataset uses the previously-discussed USGS earthquake data---spanning the entire globe---and we specify Shasta County (in northern California) as a region of interest for filtering. Although we also use Shasta County to cull our Polygon dataset, we use United States cities for the Feature geometries. We perform each query three times and average the runtimes. See the results in Table~\ref{table:tests}.
+
+\begin{table}[ht]
+\centering
+
+    \begin{tabular}{ |l|l|l|l|l|l| }
+        % \multicolumn{4}{ |c| }{Example datasets} \\
+        \hline
+        Dataset & Size & Best & Middle & Worst & Average\\
+        \hline
+        \multirow{3}{*}{Points}
+         & Small & SLO County & Shapefiles \\ \cline{2-6}
+         & Medium & SLO County & Shapefiles \\ \cline{2-6}
+         & Large & Pismo Beach pipeline & GeoJSON \\ \hline
+        \multirow{3}{*}{Polygons}
+         & Small & SLO County & GeoJSON \\ \cline{2-6}
+        & Medium & SLO County & Shapefiles \\ \cline{2-6}
+         & Large & Paso Robles pipeline & Shapefiles \\ \hline
+    \end{tabular}
+    
+    \caption{Performance testing results.}
+    \label{table:tests}
+\end{table}
 
 \section{Unit testing discussion}
 The following recommendations could be used to further validate RAPID with a thorough unit test suite.\footnote{On the back end, RAPID could use the Python's built-in testing module, \texttt{unittest}~\cite{DjangoTesting}} Once each required field for geospatial features is located for each possible input and output, exhaustive unit tests can ensure that fields in an input format can be converted to the corresponding fields in any output format. In the event storage or conversion fails, unit tests for the following components would reveal where and why:
