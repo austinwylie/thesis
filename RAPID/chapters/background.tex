@@ -151,7 +151,9 @@ INSERT INTO geometries VALUES
 SELECT name, ST_AsText(geom)
 FROM geometries;
 \end{Verbatim}
+\vspace{-22pt}
 \caption{Example spatial DBMS operations.}
+\vspace{8pt}
 \label{fig:spatialsql}
 \end{figure}
 
@@ -165,6 +167,7 @@ FROM geometries;
 "Polygon with hole";"POLYGON((35 10,45 45,15 40,10 20,35 10),
                              (20 30,35 35,30 20,20 30))"
 \end{Verbatim}
+\vspace{-20pt}
 \caption{\texttt{SELECT *} results from Figure~\ref{fig:spatialsql}.}
 \label{fig:sqlresult}
 \end{figure}
@@ -246,6 +249,7 @@ FROM roads
 JOIN pois 
 ON ST_DWithin(roads.geom, pois.geom, 1609);
 \end{Verbatim}
+\vspace{-20pt}
 \caption{Example queries using geospatial operators.}
 \label{fig:spatialselect1}
 \end{figure}

@@ -3,6 +3,8 @@
 \usepackage{etex}
 \usepackage[morefloats=125]{morefloats}
 \usepackage[hyphens]{url}
+\def\newblock{\hskip .11em plus .33em minus .07em}
+\usepackage[numbers,sort]{natbib}
 \usepackage[breaklinks=true]{hyperref}
 \usepackage{subfig}
 \usepackage{graphicx}
@@ -27,13 +29,14 @@
 \usepackage{textcomp}
 \usepackage{multirow}
 \usepackage[inline]{enumitem}
+% \usepackage[numbers,sort]{natbib}
 
 % \usepackage{subcaption}
 
 \makeindex
 \makeglossaries
 
-\bibliographystyle{abbrv}
+% \bibliographystyle{abbrv}
 
 \setlength{\parindent}{0.25in} \setlength{\parskip}{6pt}
 \geometry{verbose,nohead,tmargin=1in,bmargin=1in,lmargin=1.5in,rmargin=1in}
@@ -107,11 +110,17 @@
 
 \input{chapter-outline}
 
-\clearpage
+\cleardoublepage
+\newpage
+\pagebreak
+
+\input{dot}
+
+
 \begin{flushleft}
 % \nocite{*}
-\bibliography{bibliography}
 \bibliographystyle{plain}
+\bibliography{bibliography}
 \end{flushleft}
 
 \begin{appendices}
